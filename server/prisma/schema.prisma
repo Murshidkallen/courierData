@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Courier {
+  id     Int      @id @default(autoincrement())
+  slipNo String? // Auto-generated
+  date   DateTime @default(now())
+  unit   String? // Renamed from weight
+
+  customerName     String
+  phoneNumber      String?
+  products         Product[]
+  salesExecutive   SalesExecutive? @relation(fields: [salesExecutiveId], references: [id])
+  salesExecutiveId Int?
+  commissionPct    Float? // Snapshot of % at booking
+  commissionAmount Float?
+  courierPaid      Float?
+  totalPaid        Float?
+  address          String?
+  pincode          String? // New Pincode
+  courierCost      Float?
+  status           String          @default("Pending") // New Status Field
+  trackingId       String          @unique
+  packingCost      Float?
+  profit           Float?
+
+  partner   Partner? @relation(fields: [partnerId], references: [id])
+  partnerId Int?
+
+  enteredBy   User? @relation(fields: [enteredById], references: [id])
+  enteredById Int? // For Staff tracking
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id        Int     @id @default(autoincrement())
+  name      String
+  cost      Float?
+  price     Float?
+  courier   Courier @relation(fields: [courierId], references: [id], onDelete: Cascade)
+  courierId Int
+}
+
+model SalesExecutive {
+  id        Int       @id @default(autoincrement())
+  name      String
+  phone     String?
+  rate      Float     @default(0) // Comission Rate %
+  couriers  Courier[]
+  createdAt DateTime  @default(now())
+}
+
+model Partner {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  rate      Float? // Default rate if applicable
+  couriers  Courier[]
+  user      User?     @relation(fields: [userId], references: [id]) // Login Link
+  userId    Int?      @unique
+  createdAt DateTime  @default(now())
+}
+
+model Invoice {
+  id        Int      @id @default(autoincrement())
+  month     String // Format: YYYY-MM
+  amount    Float
+  status    String   @default("Pending") // Pending, Paid, Rejected
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  username        String    @unique
+  password        String
+  role            String    @default("STAFF") // ADMIN, PARTNER, STAFF, VIEWER
+  visibleFields   String    @default("*")
+  invoices        Invoice[]
+  enteredCouriers Courier[]
+  createdAt       DateTime  @default(now())
+  Partner         Partner?
+}
