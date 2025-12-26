@@ -20,7 +20,7 @@ const PartnerManager: React.FC<Props> = ({ onClose }) => {
     const [editing, setEditing] = useState<Partner | null>(null);
     const [newName, setNewName] = useState('');
     const [newRate, setNewRate] = useState('');
-    const [error, setError] = useState('');
+
 
     useEffect(() => {
         fetchPartners();
@@ -35,7 +35,7 @@ const PartnerManager: React.FC<Props> = ({ onClose }) => {
                 setPartners(await res.json());
             }
         } catch (e) {
-            setError('Failed to load services');
+            console.error('Failed to load services');
         } finally {
             setIsLoading(false);
         }

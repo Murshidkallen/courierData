@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 
 interface UserFormProps {
     initialData?: {
         username: string;
         role: string;
         visibleFields: string;
+        Partner?: { id: number; name: string } | null;
     };
     onSubmit: (data: any) => void;
     onCancel: () => void;
@@ -34,6 +36,25 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, onSubmit, onCancel }) 
     const [role, setRole] = useState(initialData?.role || 'STAFF');
     const [selectedFields, setSelectedFields] = useState<string[]>([]);
     const [selectAll, setSelectAll] = useState(false);
+
+    // Partner Linking
+    const [partners, setPartners] = useState<{ id: number, name: string }[]>([]);
+    const [linkedPartnerId, setLinkedPartnerId] = useState<number | undefined>(initialData?.Partner?.id);
+
+    useEffect(() => {
+        const fetchPartners = async () => {
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`${API_URL}/api/partners`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    setPartners(await res.json());
+                }
+            } catch (e) { console.error("Failed to fetch partners", e) }
+        };
+        fetchPartners();
+    }, []);
 
     useEffect(() => {
         if (initialData?.visibleFields) {
@@ -71,7 +92,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, onSubmit, onCancel }) 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const visibleFields = selectedFields.length === AVAILABLE_FIELDS.length ? '*' : selectedFields.join(',');
-        onSubmit({ username, password, role, visibleFields });
+        onSubmit({ username, password, role, visibleFields, linkedPartnerId });
     };
 
     return (
@@ -109,6 +130,23 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, onSubmit, onCancel }) 
                     <option value="VIEWER">Viewer</option>
                 </select>
             </div>
+
+            {role === 'PARTNER' && (
+                <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                    <label className="block text-sm font-medium text-indigo-900 mb-1">Link to Service (Partner)</label>
+                    <p className="text-xs text-gray-500 mb-2">Select an existing service to link this login to. Leave empty to auto-create a new one.</p>
+                    <select
+                        value={linkedPartnerId || ''}
+                        onChange={(e) => setLinkedPartnerId(e.target.value ? Number(e.target.value) : undefined)}
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 bg-white"
+                    >
+                        <option value="">-- Auto Create New Service --</option>
+                        {partners.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
 
             <div>
                 <div className="flex justify-between items-center mb-2">

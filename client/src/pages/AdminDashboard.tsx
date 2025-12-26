@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Plus, Edit2, Trash2, ArrowLeft } from 'lucide-react';
+import { LogOut, Plus, Edit2, Trash2, ArrowLeft, Truck } from 'lucide-react';
 import UserForm from '../components/UserForm';
+import PartnerManager from '../components/PartnerManager';
 import { API_URL } from '../config';
 
 interface User {
@@ -10,6 +11,7 @@ interface User {
     role: string;
     visibleFields: string;
     createdAt: string;
+    Partner?: { id: number; name: string } | null;
 }
 
 const AdminDashboard = () => {
@@ -17,6 +19,7 @@ const AdminDashboard = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | undefined>(undefined);
+    const [isPartnerManagerOpen, setIsPartnerManagerOpen] = useState(false);
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -118,13 +121,6 @@ const AdminDashboard = () => {
                             Admin Dashboard
                         </h1>
                     </div>
-                    import PartnerManager from '../components/PartnerManager';
-                    import {Truck} from 'lucide-react'; // Add icon import
-
-                    // ... inside component ...
-                    const [isPartnerManagerOpen, setIsPartnerManagerOpen] = useState(false);
-
-                    // ... inside return ...
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setIsPartnerManagerOpen(true)}
