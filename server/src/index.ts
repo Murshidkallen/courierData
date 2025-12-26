@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import authRouter from './auth';
 import statsRouter from './stats';
 import adminRoutes from './routes/admin';
+import partnersRouter from './routes/partners';
 import { authenticateToken, AuthRequest } from './middleware';
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api', statsRouter);
 app.use('/api/admin', adminRoutes);
+app.use('/api/partners', partnersRouter);
 
 // --- SALES EXECUTIVES ---
 
@@ -46,25 +48,7 @@ app.post('/api/sales-executives', authenticateToken, async (req, res) => {
     }
 });
 
-// --- PARTNERS ---
 
-app.get('/api/partners', authenticateToken, async (req, res) => {
-    try {
-        const partners = await prisma.partner.findMany();
-        res.json(partners);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch partners' });
-    }
-});
-
-app.post('/api/partners', authenticateToken, async (req, res) => {
-    try {
-        const partner = await prisma.partner.create({ data: req.body });
-        res.json(partner);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create partner' });
-    }
-});
 
 // --- PRODUCT SUGGESTIONS ---
 
@@ -249,7 +233,8 @@ app.post('/api/couriers', authenticateToken, async (req, res) => {
     } catch (error: any) {
         console.error(error);
         if (error.code === 'P2002') {
-            res.status(409).json({ error: 'Tracking ID already exists' });
+            const target = (error.meta as any)?.target || 'Tracking ID';
+            res.status(409).json({ error: `${target} already exists` });
         } else {
             res.status(500).json({ error: 'Failed to create courier' });
         }

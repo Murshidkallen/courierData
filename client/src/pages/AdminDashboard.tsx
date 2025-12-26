@@ -118,7 +118,21 @@ const AdminDashboard = () => {
                             Admin Dashboard
                         </h1>
                     </div>
+                    import PartnerManager from '../components/PartnerManager';
+                    import {Truck} from 'lucide-react'; // Add icon import
+
+                    // ... inside component ...
+                    const [isPartnerManagerOpen, setIsPartnerManagerOpen] = useState(false);
+
+                    // ... inside return ...
                     <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setIsPartnerManagerOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
+                        >
+                            <Truck className="w-4 h-4" />
+                            Manage Services
+                        </button>
                         <button
                             onClick={handleCreate}
                             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
@@ -135,6 +149,8 @@ const AdminDashboard = () => {
                         </button>
                     </div>
                 </div>
+
+                {isPartnerManagerOpen && <PartnerManager onClose={() => setIsPartnerManagerOpen(false)} />}
 
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
