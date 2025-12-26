@@ -1,3 +1,4 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as jwtDecodeLib from 'jwt-decode';
 
 // Robust import for different build environments

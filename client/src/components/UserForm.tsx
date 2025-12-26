@@ -106,6 +106,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialData, onSubmit, onCancel }) 
                     <option value="STAFF">Staff</option>
                     <option value="PARTNER">Partner</option>
                     <option value="ADMIN">Admin</option>
+                    <option value="VIEWER">Viewer</option>
                 </select>
             </div>
 
