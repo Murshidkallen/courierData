@@ -265,57 +265,64 @@ const CourierForm: React.FC<Props> = ({ onSubmit, initialData, onCancelEdit }) =
                         />
                     </div>
 
-                    {/* Tracking ID */}
-                    <div className="col-span-1">
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tracking ID</label>
-                        <input type="text" name="trackingId" required onChange={handleChange} value={formData.trackingId}
-                            placeholder="Scan or Type ID"
-                            className="w-full rounded-lg border-gray-200 p-2.5 text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
-                    </div>
+                    {/* Tracking ID (Hidden for Staff on Create) */}
+                    {(user?.role !== 'STAFF' || initialData) && (
+                        <div className="col-span-1">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tracking ID</label>
+                            <input type="text" name="trackingId" required={user?.role !== 'STAFF'} onChange={handleChange} value={formData.trackingId}
+                                placeholder={user?.role === 'STAFF' ? "Auto-generated" : "Scan or Type ID"}
+                                disabled={user?.role === 'STAFF' && !initialData}
+                                className="w-full rounded-lg border-gray-200 p-2.5 text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                        </div>
+                    )}
 
-                    {/* Sales Exec / Agent */}
-                    <div className="col-span-1">
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Sales Agent</label>
-                        {!isCreatingAgent ? (
-                            <select name="salesExecutiveId" onChange={handleChange} value={formData.salesExecutiveId || ''}
-                                className="w-full rounded-lg border-gray-200 p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                                <option value="">-- Direct / None --</option>
-                                {executives.map(e => (
-                                    <option key={e.id} value={e.id}>{e.name} ({e.rate}%)</option>
-                                ))}
-                                <option value="NEW" className="text-indigo-600 font-bold">+ Create New Agent</option>
-                            </select>
-                        ) : (
-                            <div className="flex space-x-2">
-                                <input placeholder="Name" className="w-full border rounded p-2 text-xs" value={newAgent.name} onChange={e => setNewAgent({ ...newAgent, name: e.target.value })} />
-                                <input placeholder="%" type="number" className="w-16 border rounded p-2 text-xs" value={newAgent.rate} onChange={e => setNewAgent({ ...newAgent, rate: parseFloat(e.target.value) })} />
-                                <button type="button" onClick={createAgent} className="bg-indigo-600 text-white px-2 rounded">✓</button>
-                                <button type="button" onClick={() => setIsCreatingAgent(false)} className="bg-gray-300 text-gray-700 px-2 rounded">✕</button>
-                            </div>
-                        )}
-                        {formData.commissionAmount! > 0 && <span className="text-xs text-orange-500 font-medium ml-1">Comm: ₹{formData.commissionAmount?.toFixed(2)}</span>}
-                    </div>
+                    {/* Sales Exec / Agent (Hidden for Staff) */}
+                    {user?.role !== 'STAFF' && (
+                        <div className="col-span-1">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Sales Agent</label>
+                            {!isCreatingAgent ? (
+                                <select name="salesExecutiveId" onChange={handleChange} value={formData.salesExecutiveId || ''}
+                                    className="w-full rounded-lg border-gray-200 p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                                    <option value="">-- Direct / None --</option>
+                                    {executives.map(e => (
+                                        <option key={e.id} value={e.id}>{e.name} ({e.rate}%)</option>
+                                    ))}
+                                    <option value="NEW" className="text-indigo-600 font-bold">+ Create New Agent</option>
+                                </select>
+                            ) : (
+                                <div className="flex space-x-2">
+                                    <input placeholder="Name" className="w-full border rounded p-2 text-xs" value={newAgent.name} onChange={e => setNewAgent({ ...newAgent, name: e.target.value })} />
+                                    <input placeholder="%" type="number" className="w-16 border rounded p-2 text-xs" value={newAgent.rate} onChange={e => setNewAgent({ ...newAgent, rate: parseFloat(e.target.value) })} />
+                                    <button type="button" onClick={createAgent} className="bg-indigo-600 text-white px-2 rounded">✓</button>
+                                    <button type="button" onClick={() => setIsCreatingAgent(false)} className="bg-gray-300 text-gray-700 px-2 rounded">✕</button>
+                                </div>
+                            )}
+                            {formData.commissionAmount! > 0 && <span className="text-xs text-orange-500 font-medium ml-1">Comm: ₹{formData.commissionAmount?.toFixed(2)}</span>}
+                        </div>
+                    )}
 
-                    {/* Partner / Service */}
-                    <div className="col-span-1">
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Courier Service</label>
-                        {!isCreatingPartner ? (
-                            <select name="partnerId" onChange={handleChange} value={formData.partnerId || ''}
-                                className="w-full rounded-lg border-gray-200 p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                                <option value="">-- Select Partner --</option>
-                                {partners.map(p => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                ))}
-                                <option value="NEW" className="text-indigo-600 font-bold">+ Create New Service</option>
-                            </select>
-                        ) : (
-                            <div className="flex space-x-2">
-                                <input placeholder="Name" className="w-full border rounded p-2 text-xs" value={newPartner.name} onChange={e => setNewPartner({ ...newPartner, name: e.target.value })} />
-                                <button type="button" onClick={createPartner} className="bg-indigo-600 text-white px-2 rounded">✓</button>
-                                <button type="button" onClick={() => setIsCreatingPartner(false)} className="bg-gray-300 text-gray-700 px-2 rounded">✕</button>
-                            </div>
-                        )}
-                    </div>
+                    {/* Partner / Service (Hidden for Staff) */}
+                    {user?.role !== 'STAFF' && (
+                        <div className="col-span-1">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Courier Service</label>
+                            {!isCreatingPartner ? (
+                                <select name="partnerId" onChange={handleChange} value={formData.partnerId || ''}
+                                    className="w-full rounded-lg border-gray-200 p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                                    <option value="">-- Select Partner --</option>
+                                    {partners.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                    ))}
+                                    <option value="NEW" className="text-indigo-600 font-bold">+ Create New Service</option>
+                                </select>
+                            ) : (
+                                <div className="flex space-x-2">
+                                    <input placeholder="Name" className="w-full border rounded p-2 text-xs" value={newPartner.name} onChange={e => setNewPartner({ ...newPartner, name: e.target.value })} />
+                                    <button type="button" onClick={createPartner} className="bg-indigo-600 text-white px-2 rounded">✓</button>
+                                    <button type="button" onClick={() => setIsCreatingPartner(false)} className="bg-gray-300 text-gray-700 px-2 rounded">✕</button>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Customer Info */}
                     <div className="col-span-1">
@@ -331,12 +338,14 @@ const CourierForm: React.FC<Props> = ({ onSubmit, initialData, onCancelEdit }) =
                             className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
                     </div>
                     {/* Unit & Pincode */}
-                    <div className="col-span-1">
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Unit / Wt</label>
-                        <input type="text" name="unit" onChange={handleChange} value={formData.unit || ''}
-                            placeholder="e.g. 5kg"
-                            className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
-                    </div>
+                    {user?.role !== 'STAFF' && (
+                        <div className="col-span-1">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Unit / Wt</label>
+                            <input type="text" name="unit" onChange={handleChange} value={formData.unit || ''}
+                                placeholder="e.g. 5kg"
+                                className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                        </div>
+                    )}
                     <div className="col-span-1">
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Pincode</label>
                         <input type="text" name="pincode" onChange={handleChange} value={formData.pincode || ''}
@@ -371,12 +380,14 @@ const CourierForm: React.FC<Props> = ({ onSubmit, initialData, onCancelEdit }) =
                                         onChange={(e) => handleProductChange(index, 'name', e.target.value)}
                                         className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                                 </div>
-                                <div className="col-span-3">
-                                    <input type="number" placeholder="Cost (₹)" step="0.01"
-                                        value={product.cost || ''}
-                                        onChange={(e) => handleProductChange(index, 'cost', e.target.value)}
-                                        className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-                                </div>
+                                {user?.role !== 'STAFF' && (
+                                    <div className="col-span-3">
+                                        <input type="number" placeholder="Cost (₹)" step="0.01"
+                                            value={product.cost || ''}
+                                            onChange={(e) => handleProductChange(index, 'cost', e.target.value)}
+                                            className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                    </div>
+                                )}
                                 <div className="col-span-3">
                                     <input type="number" placeholder="Price (₹)" step="0.01"
                                         value={product.price || ''}
@@ -399,11 +410,13 @@ const CourierForm: React.FC<Props> = ({ onSubmit, initialData, onCancelEdit }) =
                             <input type="number" name="courierPaid" step="0.01" onChange={handleChange} value={formData.courierPaid || ''}
                                 className="w-full rounded-lg border-gray-200 p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                         </div>
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expense: Courier</label>
-                            <input type="number" name="courierCost" step="0.01" onChange={handleChange} value={formData.courierCost || ''}
-                                className="w-full rounded-lg border-gray-200 p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-                        </div>
+                        {user?.role !== 'STAFF' && (
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expense: Courier</label>
+                                <input type="number" name="courierCost" step="0.01" onChange={handleChange} value={formData.courierCost || ''}
+                                    className="w-full rounded-lg border-gray-200 p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                            </div>
+                        )}
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expense: Packing</label>
                             <input type="number" name="packingCost" step="0.01" onChange={handleChange} value={formData.packingCost || ''}

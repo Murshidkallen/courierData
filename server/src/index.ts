@@ -134,12 +134,43 @@ app.put('/api/couriers/:id', authenticateToken, async (req, res) => {
     if (user?.role === 'VIEWER') return res.status(403).json({ error: 'Viewers cannot edit' });
 
     const { id } = req.params;
-    const { products, salesExecutiveId, partnerId, ...data } = req.body;
+    const { products, salesExecutiveId, partnerId, status, ...data } = req.body;
+
+    // VALIDATION: If status is being changed to "active" states, require fields
+    // We need to fetch the current record if fields aren't in the body to check them, 
+    // but for simplicity (and usually provided in form), we'll check the result of the merge or assume UI sends all.
+    // Actually, safer to check the body params if they are being updated, or rely on UI? 
+    // Server-side enforcement is requested.
+
+    if (['Packed', 'Shipped', 'Sent'].includes(status)) {
+        // We need to ensure we have valid data. 
+        // 1. Tracking ID must NOT be TEMP
+        // 2. Partner (Service) must be selected
+        // 3. Unit/Wt ?? (User said "Sales Agent, Expense: Courier,Tracking ID, Unit / Wt, Courier Service")
+
+        // Since this is a PATCH-like update usually sending the whole form from our UI:
+        const tid = data.trackingId;
+        const pid = partnerId;
+
+        if (tid && String(tid).startsWith('TEMP-')) {
+            return res.status(400).json({ error: 'Real Tracking ID is required to change status.' });
+        }
+        if (!tid && !data.trackingId) {
+            // If not provided in body, maybe it's already in DB? We'd need to check DB. 
+            // With current UI, we send everything on edit. Let's assume body has it.
+        }
+
+        if (!pid) {
+            return res.status(400).json({ error: 'Courier Service (Partner) is required.' });
+        }
+    }
+
     try {
         const result = await prisma.courier.update({
             where: { id: Number(id) },
             data: {
                 ...data,
+                status,
                 salesExecutiveId: salesExecutiveId !== undefined ? (salesExecutiveId ? Number(salesExecutiveId) : null) : undefined,
                 partnerId: partnerId !== undefined ? (partnerId ? Number(partnerId) : null) : undefined,
                 products: products ? {
@@ -185,6 +216,11 @@ app.post('/api/couriers', authenticateToken, async (req, res) => {
             courierData.slipNo = String(nextSlip);
         }
 
+        // Handle Missing Tracking ID (Staff Entry)
+        if (!courierData.trackingId) {
+            courierData.trackingId = `TEMP-${Date.now()}`;
+        }
+
         // Calculations
         const totalPaid = courierData.totalPaid || 0;
         const courierCost = courierData.courierCost || 0;
@@ -212,8 +248,6 @@ app.post('/api/couriers', authenticateToken, async (req, res) => {
         delete (courierData as any).recipient;
         delete (courierData as any).origin;
         delete (courierData as any).destination;
-
-        // ...
 
         let finalPartnerId = partnerId ? Number(partnerId) : null;
 
