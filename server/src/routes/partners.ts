@@ -19,6 +19,19 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
+// Create Partner - Admin Only (for now, or allowed internally for UserForm)
+router.post('/', authenticateToken, async (req, res) => {
+    const { name, rate } = req.body;
+    try {
+        const partner = await prisma.partner.create({
+            data: { name, rate: Number(rate) || 0 }
+        });
+        res.json(partner);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create partner' });
+    }
+});
+
 // Update Partner (Rename) - Admin Only
 router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req, res) => {
     const { id } = req.params;
