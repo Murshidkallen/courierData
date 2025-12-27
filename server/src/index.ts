@@ -213,12 +213,26 @@ app.post('/api/couriers', authenticateToken, async (req, res) => {
         delete (courierData as any).origin;
         delete (courierData as any).destination;
 
+        // ...
+
+        let finalPartnerId = partnerId ? Number(partnerId) : null;
+
+        // RBAC: Force Partner ID if user is PARTNER
+        if (user?.role === 'PARTNER') {
+            const partnerProfile = await prisma.partner.findUnique({ where: { userId: user.id } });
+            if (partnerProfile) {
+                finalPartnerId = partnerProfile.id;
+            } else {
+                return res.status(403).json({ error: 'No Service linked to this Partner User.' });
+            }
+        }
+
         // Create
         const courier = await prisma.courier.create({
             data: {
                 ...courierData,
                 salesExecutiveId: salesExecutiveId ? Number(salesExecutiveId) : null,
-                partnerId: partnerId ? Number(partnerId) : null,
+                partnerId: finalPartnerId,
                 enteredById: user?.id,
                 commissionAmount,
                 commissionPct,
