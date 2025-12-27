@@ -112,36 +112,37 @@ const AdminDashboard = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-8 font-sans">
             <div className="max-w-6xl mx-auto">
-                <div className="flex justify-between items-center mb-8 bg-white/40 backdrop-blur-lg p-6 rounded-2xl border border-white/50 shadow-xl">
-                    <div className="flex items-center gap-4">
+                <div className="flex flex-col md:flex-row justify-between items-center mb-8 bg-white/40 backdrop-blur-lg p-6 rounded-2xl border border-white/50 shadow-xl gap-4 md:gap-0">
+                    <div className="flex items-center gap-4 w-full md:w-auto">
                         <button onClick={() => navigate('/')} className="p-2 hover:bg-white/50 rounded-full transition-colors">
                             <ArrowLeft className="w-6 h-6 text-gray-700" />
                         </button>
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                             Admin Dashboard
                         </h1>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto justify-end">
                         <button
                             onClick={() => setIsPartnerManagerOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
+                            className="flex items-center gap-2 px-3 py-2 text-sm md:text-base md:px-4 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
                         >
                             <Truck className="w-4 h-4" />
-                            Manage Services
+                            <span className="hidden md:inline">Manage Services</span>
+                            <span className="md:hidden">Services</span>
                         </button>
                         <button
                             onClick={handleCreate}
-                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                            className="flex items-center gap-2 px-3 py-2 text-sm md:text-base md:px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
                         >
                             <Plus className="w-4 h-4" />
-                            New User
+                            <span className="hidden md:inline">New User</span>
+                            <span className="md:hidden">Add</span>
                         </button>
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-2 px-4 py-2 bg-white/50 text-gray-700 rounded-lg hover:bg-white/80 transition-colors border border-white/60"
+                            className="flex items-center gap-2 px-3 py-2 text-sm md:text-base md:px-4 bg-white/50 text-gray-700 rounded-lg hover:bg-white/80 transition-colors border border-white/60"
                         >
                             <LogOut className="w-4 h-4" />
-                            Logout
                         </button>
                     </div>
                 </div>

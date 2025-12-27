@@ -373,30 +373,30 @@ const CourierForm: React.FC<Props> = ({ onSubmit, initialData, onCancelEdit }) =
                             {suggestions.map((s, i) => <option key={i} value={s.name} />)}
                         </datalist>
                         {formData.products.map((product, index) => (
-                            <div key={index} className="grid grid-cols-12 gap-3 mb-2 items-center">
-                                <div className="col-span-5">
+                            <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-2 items-center bg-white p-2 md:p-0 rounded-lg shadow-sm md:shadow-none border md:border-0 border-gray-100">
+                                <div className="col-span-1 md:col-span-5">
                                     <input type="text" placeholder="Item Name" list="suggested-products"
                                         value={product.name}
                                         onChange={(e) => handleProductChange(index, 'name', e.target.value)}
                                         className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                                 </div>
                                 {user?.role !== 'STAFF' && (
-                                    <div className="col-span-3">
+                                    <div className="col-span-1 md:col-span-3">
                                         <input type="number" placeholder="Cost (₹)" step="0.01"
                                             value={product.cost || ''}
                                             onChange={(e) => handleProductChange(index, 'cost', e.target.value)}
                                             className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                                     </div>
                                 )}
-                                <div className="col-span-3">
+                                <div className="col-span-1 md:col-span-3">
                                     <input type="number" placeholder="Price (₹)" step="0.01"
                                         value={product.price || ''}
                                         onChange={(e) => handleProductChange(index, 'price', e.target.value)}
                                         className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                                 </div>
-                                <div className="col-span-1 text-center">
+                                <div className="col-span-1 md:col-span-1 text-center">
                                     {index > 0 && (
-                                        <button type="button" onClick={() => removeProduct(index)} className="text-red-400 hover:text-red-600 font-bold transition-colors">✕</button>
+                                        <button type="button" onClick={() => removeProduct(index)} className="text-red-400 hover:text-red-600 font-bold transition-colors w-full md:w-auto p-2 md:p-0 bg-red-50 md:bg-transparent rounded-lg">✕ Remove</button>
                                     )}
                                 </div>
                             </div>
