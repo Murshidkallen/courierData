@@ -140,8 +140,8 @@ app.put('/api/couriers/:id', authenticateToken, async (req, res) => {
             where: { id: Number(id) },
             data: {
                 ...data,
-                salesExecutiveId: salesExecutiveId ? Number(salesExecutiveId) : null,
-                partnerId: partnerId ? Number(partnerId) : null,
+                salesExecutiveId: salesExecutiveId !== undefined ? (salesExecutiveId ? Number(salesExecutiveId) : null) : undefined,
+                partnerId: partnerId !== undefined ? (partnerId ? Number(partnerId) : null) : undefined,
                 products: products ? {
                     deleteMany: {},
                     create: products.map((p: any) => ({

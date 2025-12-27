@@ -259,7 +259,7 @@ const CourierForm: React.FC<Props> = ({ onSubmit, initialData, onCancelEdit }) =
                     <div className="col-span-1">
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Date & Time</label>
                         <input type="datetime-local" name="date" required
-                            defaultValue={formatDateForInput(new Date())}
+                            value={formatDateForInput(formData.date)}
                             className="w-full rounded-lg border-gray-200 bg-gray-50 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                             onChange={(e) => setFormData({ ...formData, date: new Date(e.target.value) })}
                         />
