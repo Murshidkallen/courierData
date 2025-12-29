@@ -6,7 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.ts",
     "start": "node dist/index.js",
-    "build": "tsc",
+    "build": "npx prisma generate && tsc",
+    "postinstall": "npx prisma generate",
     "backup-data": "ts-node scripts/backup_data.ts",
     "restore-data": "ts-node scripts/restore_data.ts"
   },
