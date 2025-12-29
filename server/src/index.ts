@@ -12,8 +12,7 @@ const prisma = new PrismaClient();
 const port = process.env.PORT || 3000;
 
 app.use(cors({
-    origin: process.env.CLIENT_URL || '*', // Allow Vercel frontend or *
-    credentials: true,
+    origin: '*', // Allow all origins for easier partner/staff access
 }));
 app.use(express.json());
 
