@@ -196,7 +196,8 @@ app.post('/api/couriers', authenticateToken, async (req, res) => {
     if (user?.role === 'VIEWER') return res.status(403).json({ error: 'Viewers cannot create' });
 
     try {
-        const { products, salesExecutiveId, partnerId, ...courierData } = req.body;
+        const { products, salesExecutiveId: reqSalesExecutiveId, partnerId, ...courierData } = req.body;
+        let salesExecutiveId = reqSalesExecutiveId ? Number(reqSalesExecutiveId) : null;
 
         // Ensure date
         if (courierData.date) {
@@ -239,6 +240,14 @@ app.post('/api/couriers', authenticateToken, async (req, res) => {
             const exec = await prisma.salesExecutive.findUnique({ where: { id: Number(salesExecutiveId) } });
             if (exec) {
                 commissionPct = exec.rate;
+                commissionAmount = profit * (commissionPct / 100);
+            }
+        } else if (user?.role === 'STAFF') {
+            // Auto-assign Sales Agent for STAFF users
+            const staffAgent = await prisma.salesExecutive.findUnique({ where: { userId: user.id } });
+            if (staffAgent) {
+                salesExecutiveId = staffAgent.id; // Correctly link the ID
+                commissionPct = staffAgent.rate;
                 commissionAmount = profit * (commissionPct / 100);
             }
         }

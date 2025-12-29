@@ -55,6 +55,8 @@ model SalesExecutive {
   phone     String?
   rate      Float     @default(0) // Comission Rate %
   couriers  Courier[]
+  user      User?     @relation(fields: [userId], references: [id])
+  userId    Int?      @unique
   createdAt DateTime  @default(now())
 }
 
@@ -89,4 +91,5 @@ model User {
   enteredCouriers Courier[]
   createdAt       DateTime  @default(now())
   Partner         Partner?
+  SalesExecutive  SalesExecutive?
 }
