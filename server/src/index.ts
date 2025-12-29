@@ -20,6 +20,7 @@ app.options('*', cors()); // Explicitly handle preflight
 app.use(express.json());
 
 // Auth & Stats Routes
+app.get('/api/health', (req, res) => res.send('OK')); // Simple Health Check
 app.use('/api/auth', authRouter);
 app.use('/api', statsRouter);
 app.use('/api/admin', adminRoutes);
