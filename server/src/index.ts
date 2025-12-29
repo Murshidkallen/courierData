@@ -12,8 +12,11 @@ const prisma = new PrismaClient();
 const port = process.env.PORT || 3000;
 
 app.use(cors({
-    origin: '*', // Allow all origins for easier partner/staff access
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
+app.options('*', cors()); // Explicitly handle preflight
 app.use(express.json());
 
 // Auth & Stats Routes
