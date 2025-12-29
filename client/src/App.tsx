@@ -15,7 +15,7 @@ import { Settings, RefreshCw } from 'lucide-react';
 import { API_URL } from './config';
 
 function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const [couriers, setCouriers] = useState<Courier[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingCourier, setEditingCourier] = useState<Courier | null>(null);
@@ -125,6 +125,7 @@ function Dashboard() {
     }
   };
 
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!user) return <Navigate to="/login" />;
 
   return (
