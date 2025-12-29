@@ -16,7 +16,7 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.options('*', cors()); // Explicitly handle preflight
+app.options(/(.*)/, cors()); // Explicitly handle preflight using regex for Express 5 compatibility
 app.use(express.json());
 
 // Auth & Stats Routes
