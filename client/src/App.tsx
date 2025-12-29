@@ -133,49 +133,58 @@ function Dashboard() {
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="max-w-7xl mx-auto space-y-8">
-        <header className="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-lg shadow-sm">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-3xl font-extrabold text-indigo-900 tracking-tight">📦 Courier Data</h1>
-            <span className="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded-full font-bold uppercase">{user.role}</span>
+        <header className="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-lg shadow-sm gap-4">
+          <div className="flex items-center justify-between w-full md:w-auto">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-indigo-900 tracking-tight">📦 Courier Data</h1>
+              <span className="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded-full font-bold uppercase">{user.role}</span>
+            </div>
+            {/* Mobile Logout (Icon only) - Optional or keep inside main group? Let's keep main group together for simplicity but use wrap */}
           </div>
-          <div className="flex items-center space-x-4 mt-4 md:mt-0">
-            <div className="relative">
+
+          <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
+            <div className="relative w-full sm:w-auto">
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={handleSearch}
-                className="p-2 pl-4 border border-gray-300 rounded-full shadow-sm w-64 focus:ring-2 focus:ring-indigo-500 outline-none"
+                className="p-2 pl-4 border border-gray-300 rounded-full shadow-sm w-full sm:w-64 focus:ring-2 focus:ring-indigo-500 outline-none"
               />
             </div>
-            {/* Billing Link */}
-            <button
-              onClick={() => window.location.href = '/billing'}
-              className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
-              title="Billing"
-            >
-              <span className="text-xl">💳</span>
-            </button>
 
-            {/* Refresh Button */}
-            <button
-              onClick={() => window.location.reload()}
-              className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
-              title="Refresh Data"
-            >
-              <RefreshCw className="w-5 h-5" />
-            </button>
+            <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4">
+              <div className="flex items-center space-x-2">
+                {/* Billing Link */}
+                <button
+                  onClick={() => window.location.href = '/billing'}
+                  className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors flex-shrink-0"
+                  title="Billing"
+                >
+                  <span className="text-xl">💳</span>
+                </button>
 
-            {user.role === 'ADMIN' && (
-              <button
-                onClick={() => window.location.href = '/admin'}
-                className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
-                title="Admin Panel"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-            )}
-            <button onClick={logout} className="text-sm text-gray-500 hover:text-red-500 font-medium">Logout</button>
+                {/* Refresh Button */}
+                <button
+                  onClick={() => window.location.reload()}
+                  className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors flex-shrink-0"
+                  title="Refresh Data"
+                >
+                  <RefreshCw className="w-5 h-5" />
+                </button>
+
+                {user.role === 'ADMIN' && (
+                  <button
+                    onClick={() => window.location.href = '/admin'}
+                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors flex-shrink-0"
+                    title="Admin Panel"
+                  >
+                    <Settings className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+              <button onClick={logout} className="text-sm text-gray-500 hover:text-red-500 font-medium whitespace-nowrap ml-auto sm:ml-0">Logout</button>
+            </div>
           </div>
         </header>
 

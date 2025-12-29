@@ -253,204 +253,220 @@ const CourierForm: React.FC<Props> = ({ onSubmit, initialData, onCancelEdit }) =
             </button>
 
             <div className={`transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[2500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                <form onSubmit={handleSubmit} className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6 bg-white">
+                <form onSubmit={handleSubmit} className="p-4 md:p-6 bg-white overflow-y-visible">
+                    {/* Mobile: Use Flex Col / Desktop: Use Grid */}
+                    <div className="flex flex-col md:grid md:grid-cols-4 gap-4 md:gap-6">
 
-                    {/* Date */}
-                    <div className="col-span-1">
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Date & Time</label>
-                        <input type="datetime-local" name="date" required
-                            value={formatDateForInput(formData.date)}
-                            className="w-full rounded-lg border-gray-200 bg-gray-50 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                            onChange={(e) => setFormData({ ...formData, date: new Date(e.target.value) })}
-                        />
-                    </div>
+                        {/* Section: Basic Info */}
+                        <div className="md:col-span-4 border-b border-gray-100 pb-2 mb-2 md:hidden">
+                            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider">Basic Details</h3>
+                        </div>
 
-                    {/* Tracking ID (Hidden for Staff on Create) */}
-                    {(user?.role !== 'STAFF' || initialData) && (
+                        {/* Date */}
                         <div className="col-span-1">
-                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tracking ID</label>
-                            <input type="text" name="trackingId" required={user?.role !== 'STAFF'} onChange={handleChange} value={formData.trackingId}
-                                placeholder={user?.role === 'STAFF' ? "Auto-generated" : "Scan or Type ID"}
-                                disabled={user?.role === 'STAFF' && !initialData}
-                                className="w-full rounded-lg border-gray-200 p-2.5 text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Date & Time</label>
+                            <input type="datetime-local" name="date" required
+                                value={formatDateForInput(formData.date)}
+                                className="w-full rounded-lg border-gray-200 bg-gray-50 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                onChange={(e) => setFormData({ ...formData, date: new Date(e.target.value) })}
+                            />
                         </div>
-                    )}
 
-                    {/* Sales Exec / Agent (Hidden for Staff) */}
-                    {user?.role !== 'STAFF' && (
-                        <div className="col-span-1">
-                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Sales Agent</label>
-                            {!isCreatingAgent ? (
-                                <select name="salesExecutiveId" onChange={handleChange} value={formData.salesExecutiveId || ''}
-                                    className="w-full rounded-lg border-gray-200 p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                                    <option value="">-- Direct / None --</option>
-                                    {executives.map(e => (
-                                        <option key={e.id} value={e.id}>{e.name} ({e.rate}%)</option>
-                                    ))}
-                                    <option value="NEW" className="text-indigo-600 font-bold">+ Create New Agent</option>
-                                </select>
-                            ) : (
-                                <div className="flex space-x-2">
-                                    <input placeholder="Name" className="w-full border rounded p-2 text-xs" value={newAgent.name} onChange={e => setNewAgent({ ...newAgent, name: e.target.value })} />
-                                    <input placeholder="%" type="number" className="w-16 border rounded p-2 text-xs" value={newAgent.rate} onChange={e => setNewAgent({ ...newAgent, rate: parseFloat(e.target.value) })} />
-                                    <button type="button" onClick={createAgent} className="bg-indigo-600 text-white px-2 rounded">✓</button>
-                                    <button type="button" onClick={() => setIsCreatingAgent(false)} className="bg-gray-300 text-gray-700 px-2 rounded">✕</button>
-                                </div>
-                            )}
-                            {formData.commissionAmount! > 0 && <span className="text-xs text-orange-500 font-medium ml-1">Comm: ₹{formData.commissionAmount?.toFixed(2)}</span>}
-                        </div>
-                    )}
+                        {/* Tracking ID (Hidden for Staff on Create) */}
+                        {(user?.role !== 'STAFF' || initialData) && (
+                            <div className="col-span-1">
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tracking ID</label>
+                                <input type="text" name="trackingId" required={user?.role !== 'STAFF'} onChange={handleChange} value={formData.trackingId}
+                                    placeholder={user?.role === 'STAFF' ? "Auto-generated" : "Scan or Type ID"}
+                                    disabled={user?.role === 'STAFF' && !initialData}
+                                    className="w-full rounded-lg border-gray-200 p-2.5 text-sm font-mono focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                            </div>
+                        )}
 
-                    {/* Partner / Service (Hidden for Staff) */}
-                    {user?.role !== 'STAFF' && (
-                        <div className="col-span-1">
-                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Courier Service</label>
-                            {!isCreatingPartner ? (
-                                <select name="partnerId" onChange={handleChange} value={formData.partnerId || ''}
-                                    className="w-full rounded-lg border-gray-200 p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                                    <option value="">-- Select Partner --</option>
-                                    {partners.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
-                                    <option value="NEW" className="text-indigo-600 font-bold">+ Create New Service</option>
-                                </select>
-                            ) : (
-                                <div className="flex space-x-2">
-                                    <input placeholder="Name" className="w-full border rounded p-2 text-xs" value={newPartner.name} onChange={e => setNewPartner({ ...newPartner, name: e.target.value })} />
-                                    <button type="button" onClick={createPartner} className="bg-indigo-600 text-white px-2 rounded">✓</button>
-                                    <button type="button" onClick={() => setIsCreatingPartner(false)} className="bg-gray-300 text-gray-700 px-2 rounded">✕</button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Customer Info */}
-                    <div className="col-span-1">
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Customer Name</label>
-                        <input type="text" name="customerName" required onChange={handleChange} value={formData.customerName}
-                            placeholder="Full Name"
-                            className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
-                    </div>
-                    <div className="col-span-1">
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Phone</label>
-                        <input type="text" name="phoneNumber" onChange={handleChange} value={formData.phoneNumber || ''}
-                            placeholder="Mobile Number"
-                            className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
-                    </div>
-                    {/* Unit & Pincode */}
-                    {user?.role !== 'STAFF' && (
-                        <div className="col-span-1">
-                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Unit / Wt</label>
-                            <input type="text" name="unit" onChange={handleChange} value={formData.unit || ''}
-                                placeholder="e.g. 5kg"
-                                className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
-                        </div>
-                    )}
-                    <div className="col-span-1">
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Pincode</label>
-                        <input type="text" name="pincode" onChange={handleChange} value={formData.pincode || ''}
-                            placeholder="e.g. 679321"
-                            className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
-                    </div>
-
-                    <div className="col-span-4">
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Address</label>
-                        <input name="address" onChange={handleChange} value={formData.address || ''}
-                            placeholder="Full Address"
-                            className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
-                    </div>
-
-
-                    {/* Products Section */}
-                    <div className="col-span-1 md:col-span-4 bg-gray-50/50 p-4 rounded-xl border border-dashed border-gray-300">
-                        <div className="flex justify-between items-center mb-3">
-                            <label className="block text-sm font-bold text-gray-700">📦 Products</label>
-                            <button type="button" onClick={addProduct} className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 shadow-sm transition-all focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500">
-                                + Add Item
-                            </button>
-                        </div>
-                        <datalist id="suggested-products">
-                            {suggestions.map((s, i) => <option key={i} value={s.name} />)}
-                        </datalist>
-                        {formData.products.map((product, index) => (
-                            <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-2 items-center bg-white p-2 md:p-0 rounded-lg shadow-sm md:shadow-none border md:border-0 border-gray-100">
-                                <div className="col-span-1 md:col-span-5">
-                                    <input type="text" placeholder="Item Name" list="suggested-products"
-                                        value={product.name}
-                                        onChange={(e) => handleProductChange(index, 'name', e.target.value)}
-                                        className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-                                </div>
-                                {user?.role !== 'STAFF' && (
-                                    <div className="col-span-1 md:col-span-3">
-                                        <input type="number" placeholder="Cost (₹)" step="0.01"
-                                            value={product.cost || ''}
-                                            onChange={(e) => handleProductChange(index, 'cost', e.target.value)}
-                                            className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                        {/* Sales Exec / Agent (Hidden for Staff) */}
+                        {user?.role !== 'STAFF' && (
+                            <div className="col-span-1">
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Sales Agent</label>
+                                {!isCreatingAgent ? (
+                                    <select name="salesExecutiveId" onChange={handleChange} value={formData.salesExecutiveId || ''}
+                                        className="w-full rounded-lg border-gray-200 p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                                        <option value="">-- Direct / None --</option>
+                                        {executives.map(e => (
+                                            <option key={e.id} value={e.id}>{e.name} ({e.rate}%)</option>
+                                        ))}
+                                        <option value="NEW" className="text-indigo-600 font-bold">+ Create New Agent</option>
+                                    </select>
+                                ) : (
+                                    <div className="flex space-x-2">
+                                        <input placeholder="Name" className="w-full border rounded p-2 text-xs" value={newAgent.name} onChange={e => setNewAgent({ ...newAgent, name: e.target.value })} />
+                                        <input placeholder="%" type="number" className="w-16 border rounded p-2 text-xs" value={newAgent.rate} onChange={e => setNewAgent({ ...newAgent, rate: parseFloat(e.target.value) })} />
+                                        <button type="button" onClick={createAgent} className="bg-indigo-600 text-white px-2 rounded">✓</button>
+                                        <button type="button" onClick={() => setIsCreatingAgent(false)} className="bg-gray-300 text-gray-700 px-2 rounded">✕</button>
                                     </div>
                                 )}
-                                <div className="col-span-1 md:col-span-3">
-                                    <input type="number" placeholder="Price (₹)" step="0.01"
-                                        value={product.price || ''}
-                                        onChange={(e) => handleProductChange(index, 'price', e.target.value)}
-                                        className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-                                </div>
-                                <div className="col-span-1 md:col-span-1 text-center">
-                                    {index > 0 && (
-                                        <button type="button" onClick={() => removeProduct(index)} className="text-red-400 hover:text-red-600 font-bold transition-colors w-full md:w-auto p-2 md:p-0 bg-red-50 md:bg-transparent rounded-lg">✕ Remove</button>
-                                    )}
-                                </div>
+                                {formData.commissionAmount! > 0 && <span className="text-xs text-orange-500 font-medium ml-1">Comm: ₹{formData.commissionAmount?.toFixed(2)}</span>}
                             </div>
-                        ))}
-                    </div>
+                        )}
 
-                    {/* Financials */}
-                    <div className="col-span-1 md:col-span-4 grid grid-cols-2 md:grid-cols-5 gap-4 bg-indigo-50/50 p-4 rounded-xl items-center border border-indigo-100">
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Courier Paid (Extra)</label>
-                            <input type="number" name="courierPaid" step="0.01" onChange={handleChange} value={formData.courierPaid || ''}
-                                className="w-full rounded-lg border-gray-200 p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-                        </div>
+                        {/* Partner / Service (Hidden for Staff) */}
                         {user?.role !== 'STAFF' && (
+                            <div className="col-span-1">
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Courier Service</label>
+                                {!isCreatingPartner ? (
+                                    <select name="partnerId" onChange={handleChange} value={formData.partnerId || ''}
+                                        className="w-full rounded-lg border-gray-200 p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                                        <option value="">-- Select Partner --</option>
+                                        {partners.map(p => (
+                                            <option key={p.id} value={p.id}>{p.name}</option>
+                                        ))}
+                                        <option value="NEW" className="text-indigo-600 font-bold">+ Create New Service</option>
+                                    </select>
+                                ) : (
+                                    <div className="flex space-x-2">
+                                        <input placeholder="Name" className="w-full border rounded p-2 text-xs" value={newPartner.name} onChange={e => setNewPartner({ ...newPartner, name: e.target.value })} />
+                                        <button type="button" onClick={createPartner} className="bg-indigo-600 text-white px-2 rounded">✓</button>
+                                        <button type="button" onClick={() => setIsCreatingPartner(false)} className="bg-gray-300 text-gray-700 px-2 rounded">✕</button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Customer Info */}
+                        <div className="md:col-span-4 border-b border-gray-100 pb-2 mb-2 md:hidden mt-4">
+                            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider">Customer Details</h3>
+                        </div>
+                        <div className="col-span-1">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Customer Name</label>
+                            <input type="text" name="customerName" required onChange={handleChange} value={formData.customerName}
+                                placeholder="Full Name"
+                                className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                        </div>
+                        <div className="col-span-1">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Phone</label>
+                            <input type="text" name="phoneNumber" onChange={handleChange} value={formData.phoneNumber || ''}
+                                placeholder="Mobile Number"
+                                className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                        </div>
+                        {/* Unit & Pincode */}
+                        {user?.role !== 'STAFF' && (
+                            <div className="col-span-1">
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Unit / Wt</label>
+                                <input type="text" name="unit" onChange={handleChange} value={formData.unit || ''}
+                                    placeholder="e.g. 5kg"
+                                    className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                            </div>
+                        )}
+                        <div className="col-span-1">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Pincode</label>
+                            <input type="text" name="pincode" onChange={handleChange} value={formData.pincode || ''}
+                                placeholder="e.g. 679321"
+                                className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                        </div>
+
+                        <div className="md:col-span-4">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Address</label>
+                            <input name="address" onChange={handleChange} value={formData.address || ''}
+                                placeholder="Full Address"
+                                className="w-full rounded-lg border-gray-200 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                        </div>
+
+                        {/* Products Section */}
+                        <div className="md:col-span-4 border-b border-gray-100 pb-2 mb-2 md:hidden mt-4">
+                            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider">Order Items</h3>
+                        </div>
+                        <div className="md:col-span-4 bg-gray-50/50 p-4 rounded-xl border border-dashed border-gray-300">
+                            <div className="flex justify-between items-center mb-3">
+                                <label className="block text-sm font-bold text-gray-700">📦 Products</label>
+                                <button type="button" onClick={addProduct} className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 shadow-sm transition-all focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500">
+                                    + Add Item
+                                </button>
+                            </div>
+                            <datalist id="suggested-products">
+                                {suggestions.map((s, i) => <option key={i} value={s.name} />)}
+                            </datalist>
+                            {formData.products.map((product, index) => (
+                                <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-2 items-center bg-white p-2 md:p-0 rounded-lg shadow-sm md:shadow-none border md:border-0 border-gray-100">
+                                    <div className="col-span-1 md:col-span-5">
+                                        <input type="text" placeholder="Item Name" list="suggested-products"
+                                            value={product.name}
+                                            onChange={(e) => handleProductChange(index, 'name', e.target.value)}
+                                            className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                    </div>
+                                    {user?.role !== 'STAFF' && (
+                                        <div className="col-span-1 md:col-span-3">
+                                            <input type="number" placeholder="Cost (₹)" step="0.01"
+                                                value={product.cost || ''}
+                                                onChange={(e) => handleProductChange(index, 'cost', e.target.value)}
+                                                className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                        </div>
+                                    )}
+                                    <div className="col-span-1 md:col-span-3">
+                                        <input type="number" placeholder="Price (₹)" step="0.01"
+                                            value={product.price || ''}
+                                            onChange={(e) => handleProductChange(index, 'price', e.target.value)}
+                                            className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                    </div>
+                                    <div className="col-span-1 md:col-span-1 text-center">
+                                        {index > 0 && (
+                                            <button type="button" onClick={() => removeProduct(index)} className="text-red-400 hover:text-red-600 font-bold transition-colors w-full p-2 md:p-0 bg-red-50 md:bg-transparent rounded-lg">✕</button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Financials */}
+                        <div className="md:col-span-4 border-b border-gray-100 pb-2 mb-2 md:hidden mt-4">
+                            <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider">Payment & Costs</h3>
+                        </div>
+                        <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-5 gap-4 bg-indigo-50/50 p-4 rounded-xl items-center border border-indigo-100">
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expense: Courier</label>
-                                <input type="number" name="courierCost" step="0.01" onChange={handleChange} value={formData.courierCost || ''}
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Courier Paid (Extra)</label>
+                                <input type="number" name="courierPaid" step="0.01" onChange={handleChange} value={formData.courierPaid || ''}
                                     className="w-full rounded-lg border-gray-200 p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                             </div>
-                        )}
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expense: Packing</label>
-                            <input type="number" name="packingCost" step="0.01" onChange={handleChange} value={formData.packingCost || ''}
-                                className="w-full rounded-lg border-gray-200 p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-                        </div>
-                        {/* Live Totals */}
-                        <div className="text-right">
-                            <span className="block text-xs font-bold text-gray-500 uppercase">Total Paid (Sum)</span>
-                            <span className="text-xl font-extrabold text-gray-900">₹{formData.totalPaid?.toFixed(2)}</span>
-                        </div>
-                        {user?.role !== 'STAFF' && (
-                            <div className="text-right">
-                                <span className="block text-xs font-bold text-gray-500 uppercase">Est. Profit</span>
-                                <span className={`text-xl font-extrabold ${formData.profit! >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                    ₹{formData.profit?.toFixed(2)}
-                                </span>
+                            {user?.role !== 'STAFF' && (
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expense: Courier</label>
+                                    <input type="number" name="courierCost" step="0.01" onChange={handleChange} value={formData.courierCost || ''}
+                                        className="w-full rounded-lg border-gray-200 p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                </div>
+                            )}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expense: Packing</label>
+                                <input type="number" name="packingCost" step="0.01" onChange={handleChange} value={formData.packingCost || ''}
+                                    className="w-full rounded-lg border-gray-200 p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                             </div>
-                        )}
-                    </div>
+                            {/* Live Totals */}
+                            <div className="text-right">
+                                <span className="block text-xs font-bold text-gray-500 uppercase">Total Paid (Sum)</span>
+                                <span className="text-xl font-extrabold text-gray-900">₹{formData.totalPaid?.toFixed(2)}</span>
+                            </div>
+                            {user?.role !== 'STAFF' && (
+                                <div className="text-right">
+                                    <span className="block text-xs font-bold text-gray-500 uppercase">Est. Profit</span>
+                                    <span className={`text-xl font-extrabold ${formData.profit! >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        ₹{formData.profit?.toFixed(2)}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
 
-                    <div className="col-span-1 md:col-span-4 mt-2">
-                        <button type="submit" className={`w-full py-4 text-white font-bold rounded-xl shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-                            ${initialData ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700'}`}>
-                            {initialData ? 'Update Entry' : 'Save Entry'}
-                        </button>
-                        {initialData && (
-                            <button type="button" onClick={onCancelEdit} className="w-full mt-3 py-2 text-gray-500 font-bold hover:bg-gray-100 rounded-lg transition-colors">
-                                Cancel Edit
+                        <div className="md:col-span-4 mt-2">
+                            <button type="submit" className={`w-full py-4 text-white font-bold rounded-xl shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                                ${initialData ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700'}`}>
+                                {initialData ? 'Update Entry' : 'Save Entry'}
                             </button>
-                        )}
+                            {initialData && (
+                                <button type="button" onClick={onCancelEdit} className="w-full mt-3 py-2 text-gray-500 font-bold hover:bg-gray-100 rounded-lg transition-colors">
+                                    Cancel Edit
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

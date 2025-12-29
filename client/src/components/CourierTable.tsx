@@ -355,28 +355,74 @@ Thank you for shopping with us!
                         {/* Collapsible Mobile Content */}
                         {expandedRow === courier.id && (
                             <div className="bg-gray-50 p-4 border-t border-gray-100">
-                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Details</h4>
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Full Details</h4>
                                 <div className="text-sm text-gray-700 space-y-2">
                                     <p>📱 <a href={`tel:${courier.phoneNumber}`} className="text-indigo-600 font-medium">{courier.phoneNumber}</a></p>
                                     <p>📍 {courier.address}</p>
+                                    {courier.pincode && <p>📮 Pin: {courier.pincode}</p>}
                                     {courier.unit && <p>⚖️ Unit: {courier.unit}</p>}
-                                    {courier.partner && <p>🚚 Via: {courier.partner.name}</p>}
+                                    {courier.slipNo && <p>#️⃣ Slip No: {courier.slipNo}</p>}
+
+                                    {courier.partner && <p>🚚 Via: <span className="font-semibold text-indigo-700">{courier.partner.name}</span></p>}
+
+                                    {courier.salesExecutive && (
+                                        <div className="bg-indigo-50 p-2 rounded-lg mt-1">
+                                            <p className="text-indigo-800 font-medium text-xs">Sales Agent: {courier.salesExecutive.name}</p>
+                                            <p className="text-indigo-600 text-xs">Commission: ₹{courier.commissionAmount}</p>
+                                        </div>
+                                    )}
 
                                     <div className="mt-2 border-t border-gray-200 pt-2">
                                         <p className="text-xs uppercase text-gray-400 font-bold mb-1">Products</p>
                                         <ul className="space-y-1">
                                             {courier.products.map((p, i) => (
-                                                <li key={i} className="flex justify-between">
+                                                <li key={i} className="flex justify-between border-b border-gray-100 pb-1 last:border-0">
                                                     <span>{p.name}</span>
-                                                    <span className="font-mono">₹{p.price}</span>
+                                                    <span className="font-mono text-xs">
+                                                        {user?.role !== 'PARTNER' && `(C: ${p.cost}) `}
+                                                        ₹{p.price}
+                                                    </span>
                                                 </li>
                                             ))}
                                         </ul>
                                     </div>
 
+                                    {/* Financials for Admin/Partner */}
+                                    {(user?.role === 'ADMIN' || user?.role === 'PARTNER') && (
+                                        <div className="mt-2 border-t border-gray-200 pt-2 grid grid-cols-2 gap-2 text-xs">
+                                            <div>
+                                                <span className="text-gray-500">Total Paid:</span>
+                                                <span className="font-bold block text-sm">₹{courier.totalPaid?.toFixed(2)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500">Courier Cost:</span>
+                                                <span className="font-bold block text-sm text-red-500">-₹{courier.courierCost?.toFixed(2)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500">Packing:</span>
+                                                <span className="font-bold block text-sm text-red-500">-₹{courier.packingCost?.toFixed(2)}</span>
+                                            </div>
+                                            {user?.role === 'ADMIN' && (
+                                                <div className="bg-green-50 p-1 rounded">
+                                                    <span className="text-green-700 font-bold">Profit: ₹{courier.profit?.toFixed(2)}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     {(user?.role === 'ADMIN' || user?.role === 'PARTNER') && (
                                         <div className="mt-4 pt-3 border-t border-gray-200">
-                                            <label className="text-xs font-bold text-gray-500 block mb-1">Update Status</label>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <label className="text-xs font-bold text-gray-500 block">Update Status</label>
+                                                {user?.role === 'ADMIN' && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); if (confirm('Delete this courier?')) onDelete && onDelete(courier.id); }}
+                                                        className="text-red-500 text-xs font-bold hover:text-red-700 flex items-center"
+                                                    >
+                                                        🗑️ Delete Entry
+                                                    </button>
+                                                )}
+                                            </div>
                                             <select
                                                 defaultValue={courier.status || 'Pending'}
                                                 onChange={(e) => handleStatusChange(courier, e.target.value)}

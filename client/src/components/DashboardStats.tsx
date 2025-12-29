@@ -7,6 +7,7 @@ interface StatsData {
     kpi: {
         totalOrders: number;
         totalProfit: number;
+        totalSales: number;
         todayOrders: number;
         pendingCosts: number;
     };
@@ -58,7 +59,7 @@ const DashboardStats = () => {
     );
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-10">
             {/* KPI Cards */}
             <StatCard
                 title="Total Orders"
@@ -66,6 +67,13 @@ const DashboardStats = () => {
                 icon="📦"
                 color="from-blue-500 to-blue-600"
                 subValue="All time entries"
+            />
+            <StatCard
+                title="Total Sale Amount"
+                value={`₹${stats.kpi.totalSales?.toFixed(0) || '0'}`}
+                icon="💵"
+                color="from-pink-500 to-rose-500"
+                subValue="Sum of Total Paid"
             />
             <StatCard
                 title={user?.role === 'PARTNER' ? "My Earnings" : "Total Profit"}
@@ -90,7 +98,7 @@ const DashboardStats = () => {
             />
 
             {/* Chart */}
-            <div className="col-span-1 md:col-span-4 bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+            <div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-5 bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-gray-800 text-lg font-bold">
                         {user?.role === 'PARTNER' ? "Earnings Trends" : "Profit Structure"}

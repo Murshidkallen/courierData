@@ -44,6 +44,9 @@ router.get('/stats', authenticateToken, async (req: any, res) => {
             c.status !== 'Delivered' && c.status !== 'Returned'
         ).length;
 
+        // Total Sales (Sum of totalPaid)
+        const totalSales = couriers.reduce((sum, c) => sum + (c.totalPaid || 0), 0);
+
         // Chart Data (Last 7 days)
         const chartData = [];
         for (let i = 6; i >= 0; i--) {
@@ -69,7 +72,7 @@ router.get('/stats', authenticateToken, async (req: any, res) => {
         }
 
         res.json({
-            kpi: { totalOrders, totalProfit, todayOrders, pendingCosts },
+            kpi: { totalOrders, totalProfit, totalSales, todayOrders, pendingCosts },
             chartData
         });
     } catch (error) {
