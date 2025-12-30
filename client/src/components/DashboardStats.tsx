@@ -68,13 +68,15 @@ const DashboardStats = () => {
                 color="from-blue-500 to-blue-600"
                 subValue="All time entries"
             />
-            <StatCard
-                title="Total Sale Amount"
-                value={`₹${stats.kpi.totalSales?.toFixed(0) || '0'}`}
-                icon="💵"
-                color="from-pink-500 to-rose-500"
-                subValue="Sum of Total Paid"
-            />
+            {user?.role === 'ADMIN' && (
+                <StatCard
+                    title="Total Sale Amount"
+                    value={`₹${stats.kpi.totalSales?.toFixed(0) || '0'}`}
+                    icon="💵"
+                    color="from-pink-500 to-rose-500"
+                    subValue="Sum of Total Paid"
+                />
+            )}
             <StatCard
                 title={user?.role === 'PARTNER' ? "My Earnings" : "Total Profit"}
                 value={`₹${stats.kpi.totalProfit.toFixed(2)}`}

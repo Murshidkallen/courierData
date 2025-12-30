@@ -379,7 +379,7 @@ Thank you for shopping with us!
                                                 <li key={i} className="flex justify-between border-b border-gray-100 pb-1 last:border-0">
                                                     <span>{p.name}</span>
                                                     <span className="font-mono text-xs">
-                                                        {user?.role !== 'PARTNER' && `(C: ${p.cost}) `}
+                                                        {user?.role === 'ADMIN' && `(C: ${p.cost}) `}
                                                         ₹{p.price}
                                                     </span>
                                                 </li>
@@ -390,18 +390,35 @@ Thank you for shopping with us!
                                     {/* Financials for Admin/Partner */}
                                     {(user?.role === 'ADMIN' || user?.role === 'PARTNER') && (
                                         <div className="mt-2 border-t border-gray-200 pt-2 grid grid-cols-2 gap-2 text-xs">
-                                            <div>
-                                                <span className="text-gray-500">Total Paid:</span>
-                                                <span className="font-bold block text-sm">₹{courier.totalPaid?.toFixed(2)}</span>
-                                            </div>
-                                            <div>
-                                                <span className="text-gray-500">Courier Cost:</span>
+                                            {user?.role === 'ADMIN' && (
+                                                <div>
+                                                    <span className="text-gray-500">Total Paid:</span>
+                                                    <span className="font-bold block text-sm">₹{courier.totalPaid?.toFixed(2)}</span>
+                                                </div>
+                                            )}
+                                            <span className="text-gray-500">Courier Cost:</span>
+                                            {user?.role === 'ADMIN' ? (
                                                 <span className="font-bold block text-sm text-red-500">-₹{courier.courierCost?.toFixed(2)}</span>
-                                            </div>
-                                            <div>
-                                                <span className="text-gray-500">Packing:</span>
-                                                <span className="font-bold block text-sm text-red-500">-₹{courier.packingCost?.toFixed(2)}</span>
-                                            </div>
+                                            ) : (
+                                                <input
+                                                    type="number"
+                                                    defaultValue={courier.courierCost || 0}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    onBlur={(e) => {
+                                                        const val = parseFloat(e.target.value);
+                                                        if (val !== courier.courierCost) {
+                                                            onUpdate(courier.id, { courierCost: val });
+                                                        }
+                                                    }}
+                                                    className="w-24 p-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none bg-white transition-all font-bold text-gray-700"
+                                                />
+                                            )}
+                                            {user?.role === 'ADMIN' && (
+                                                <div>
+                                                    <span className="text-gray-500">Packing:</span>
+                                                    <span className="font-bold block text-sm text-red-500">-₹{courier.packingCost?.toFixed(2)}</span>
+                                                </div>
+                                            )}
                                             {user?.role === 'ADMIN' && (
                                                 <div className="bg-green-50 p-1 rounded">
                                                     <span className="text-green-700 font-bold">Profit: ₹{courier.profit?.toFixed(2)}</span>
