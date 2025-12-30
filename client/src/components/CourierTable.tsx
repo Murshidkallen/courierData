@@ -113,7 +113,10 @@ Thank you for shopping with us!
                     if (!blob) return;
                     const file = new File([blob], `label-${courier.customerName.replace(/[^a-z0-9]/gi, '_')}.png`, { type: 'image/png' });
 
-                    if (navigator.share && navigator.canShare({ files: [file] })) {
+                    // Simple mobile detection
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+                    if (isMobile && navigator.share && navigator.canShare({ files: [file] })) {
                         try {
                             await navigator.share({
                                 files: [file],
@@ -124,11 +127,13 @@ Thank you for shopping with us!
                             console.log('Share cancelled or failed', err);
                         }
                     } else {
-                        // Fallback to download
+                        // Desktop: Force download
                         const link = document.createElement('a');
                         link.download = `label-${courier.customerName}.png`;
                         link.href = URL.createObjectURL(blob);
+                        document.body.appendChild(link); // Append to body to ensure click works in Firefox
                         link.click();
+                        document.body.removeChild(link);
                     }
                     setPrintCourier(null);
                 }, 'image/png');
