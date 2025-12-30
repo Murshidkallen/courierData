@@ -7,7 +7,16 @@ interface Props {
 
 const ShippingLabel = forwardRef<HTMLDivElement, Props>(({ courier }, ref) => {
     return (
-        <div ref={ref} className="bg-white p-6 border border-gray-800 w-[350px] text-black font-sans leading-tight">
+        <div
+            ref={ref}
+            className="p-6 font-sans leading-tight"
+            style={{
+                backgroundColor: '#ffffff',
+                color: '#000000',
+                width: '350px',
+                border: '1px solid #1f2937' // gray-800
+            }}
+        >
             <div className="mb-6">
                 <h3 className="font-bold text-lg mb-1 underline decoration-2 underline-offset-2">From,</h3>
                 <div className="pl-4 font-bold text-base">
@@ -28,7 +37,13 @@ const ShippingLabel = forwardRef<HTMLDivElement, Props>(({ courier }, ref) => {
             </div>
 
             {/* Footer with branding or tracking if needed */}
-            <div className="mt-6 pt-2 border-t border-dashed border-gray-400 text-xs text-center text-gray-500 font-normal">
+            <div
+                className="mt-6 pt-2 font-normal text-xs text-center"
+                style={{
+                    borderTop: '1px dashed #9ca3af', // gray-400
+                    color: '#6b7280' // gray-500
+                }}
+            >
                 Order ID: {courier.slipNo || courier.trackingId}
             </div>
         </div>
