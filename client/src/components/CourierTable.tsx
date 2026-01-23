@@ -260,8 +260,9 @@ Thank you for shopping with us!
                                         <td className="px-4 py-3 text-center">
                                             {(user?.role === 'ADMIN' || user?.role === 'PARTNER') ? (
                                                 <select
-                                                    defaultValue={courier.status || 'Pending'}
+                                                    value={courier.status || 'Pending'}
                                                     onChange={(e) => handleStatusChange(courier, e.target.value)}
+                                                    onClick={(e) => e.stopPropagation()}
                                                     className={`text-xs font-bold py-1 px-2 rounded-full border-0 cursor-pointer outline-none appearance-none text-center w-24 disabled:opacity-50
                                                         ${courier.status === 'Delivered' ? 'bg-green-100 text-green-700' :
                                                             courier.status === 'Shipped' ? 'bg-blue-100 text-blue-700' :
@@ -517,8 +518,9 @@ Thank you for shopping with us!
                                                 )}
                                             </div>
                                             <select
-                                                defaultValue={courier.status || 'Pending'}
+                                                value={courier.status || 'Pending'}
                                                 onChange={(e) => handleStatusChange(courier, e.target.value)}
+                                                onClick={(e) => e.stopPropagation()}
                                                 className="w-full p-2 bg-white border border-gray-300 rounded-lg text-sm"
                                             >
                                                 <option value="Pending">Pending</option>

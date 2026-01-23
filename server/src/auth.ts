@@ -29,7 +29,8 @@ router.post('/login', async (req, res) => {
 
         res.json({ token, role: user.role, username: user.username, visibleFields: user.visibleFields });
     } catch (error) {
-        res.status(500).json({ error: 'Login failed' });
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Login failed', details: error instanceof Error ? error.message : String(error) });
     }
 });
 

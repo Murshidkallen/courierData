@@ -1,0 +1,12 @@
+{
+    "ignore": [
+        "*.db",
+        "*.db-journal",
+        "dev.db",
+        "prisma/dev.db"
+    ],
+    "watch": [
+        "src"
+    ],
+    "ext": "ts,json"
+}
