@@ -220,7 +220,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                 {user?.role !== 'PARTNER' && (
                                     <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Total Paid</th>
                                 )}
-                                {user?.role === 'SUPER_ADMIN' && user?.role !== 'PARTNER' && (
+                                {user?.role === 'SUPER_ADMIN' && (
                                     <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Courier Cost</th>
                                 )}
                                 <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>

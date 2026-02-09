@@ -207,7 +207,7 @@ const CourierForm: React.FC<Props> = ({ onSubmit, initialData, onCancelEdit }) =
                 // We apply this on every change, might feel jumpy if not careful, but works for simple "letter by letter"
                 // Better regex: Replace comma followed by non-space with comma+space+Upper
                 formattedValue = (formattedValue as string).replace(/,(\S)/g, ', $1')
-                    .replace(/, ([a-z])/g, (match, p1) => `, ${p1.toUpperCase()}`);
+                    .replace(/, ([a-z])/g, (_, p1) => `, ${p1.toUpperCase()}`);
             }
         }
 

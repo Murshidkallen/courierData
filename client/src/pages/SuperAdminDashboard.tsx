@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAuth } from '../AuthContext';
 
 export default function SuperAdminDashboard() {
@@ -12,7 +11,7 @@ export default function SuperAdminDashboard() {
                         <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
                             Business Command Center
                         </h1>
-                        <p className="text-gray-400 mt-2">Welcome back, {user?.name}</p>
+                        <p className="text-gray-400 mt-2">Welcome back, {user?.username}</p>
                     </div>
                     <div className="bg-yellow-500/10 border border-yellow-500/20 px-4 py-2 rounded-lg">
                         <span className="text-yellow-500 font-mono font-bold">SUPER_ADMIN ACCESS</span>
