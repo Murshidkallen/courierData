@@ -67,8 +67,17 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const { products, salesExecutiveId, partnerId, status, ...data } = req.body;
 
     if (['Packed', 'Shipped', 'Sent'].includes(status)) {
-        const tid = data.trackingId;
-        const pid = partnerId;
+        let tid = data.trackingId;
+        let pid = partnerId;
+
+        // If missing, fetch from DB to validate
+        if (!tid || !pid) {
+            const existing = await prisma.courier.findUnique({ where: { id: Number(id) } });
+            if (existing) {
+                if (!tid) tid = existing.trackingId;
+                if (!pid) pid = existing.partnerId;
+            }
+        }
 
         if (tid && String(tid).startsWith('TEMP-')) {
             return res.status(400).json({ error: 'Real Tracking ID is required to change status.' });
@@ -205,7 +214,7 @@ router.post('/', authenticateToken, async (req, res) => {
 // Delete Courier (Admin Only)
 router.delete('/:id', authenticateToken, async (req, res) => {
     const user = (req as AuthRequest).user;
-    if (user?.role !== 'ADMIN') return res.sendStatus(403);
+    if (user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN') return res.sendStatus(403);
 
     const { id } = req.params;
     try {

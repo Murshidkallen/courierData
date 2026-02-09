@@ -7,6 +7,7 @@ import adminRoutes from './routes/admin';
 import partnersRouter from './routes/partners';
 import courierRoutes from './routes/couriers';
 import billingRoutes from './routes/billing';
+// import billingV2Routes from './routes/billing_v2';
 import invoiceRoutes from './routes/invoices';
 import salesRoutes from './routes/sales';
 import productRoutes from './routes/products';
@@ -33,6 +34,7 @@ app.use('/api/partners', partnersRouter);
 // Domain Routes
 app.use('/api/couriers', courierRoutes);
 app.use('/api/billing', billingRoutes);
+// app.use('/api/billing-v2', billingV2Routes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/sales-executives', salesRoutes);
 app.use('/api/products', productRoutes);

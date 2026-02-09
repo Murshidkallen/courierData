@@ -57,6 +57,7 @@ model SalesExecutive {
   couriers  Courier[]
   user      User?     @relation(fields: [userId], references: [id])
   userId    Int?      @unique
+  invoices  Invoice[]
   createdAt DateTime  @default(now())
 }
 
@@ -67,25 +68,37 @@ model Partner {
   couriers  Courier[]
   user      User?     @relation(fields: [userId], references: [id]) // Login Link
   userId    Int?      @unique
+  invoices  Invoice[]
   createdAt DateTime  @default(now())
 }
 
 model Invoice {
-  id        Int      @id @default(autoincrement())
-  month     String // Format: YYYY-MM
-  amount    Float
-  status    String   @default("Pending") // Pending, Paid, Rejected
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               Int             @id @default(autoincrement())
+  month            String // Format: YYYY-MM (Keep for legacy/display)
+  startDate        DateTime? // New: Start of billing period
+  endDate          DateTime? // New: End of billing period
+  amount           Float
+  status           String          @default("Pending") // Pending, Paid, Rejected
+  recipient        String?         // For "Moto Club" or "Open Coders"
+  
+  user             User?           @relation(fields: [userId], references: [id])
+  userId           Int?
+  
+  partner          Partner?        @relation(fields: [partnerId], references: [id])
+  partnerId        Int?
+
+  salesExecutive   SalesExecutive? @relation(fields: [salesExecutiveId], references: [id])
+  salesExecutiveId Int?
+
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 }
 
 model User {
   id              Int       @id @default(autoincrement())
   username        String    @unique
   password        String
-  role            String    @default("STAFF") // ADMIN, PARTNER, STAFF, VIEWER
+  role            String    @default("STAFF") // ADMIN, PARTNER, STAFF, VIEWER, SUPER_ADMIN
   visibleFields   String    @default("*")
   invoices        Invoice[]
   enteredCouriers Courier[]

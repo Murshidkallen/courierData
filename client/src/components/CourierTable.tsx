@@ -72,11 +72,21 @@ Thank you for shopping with us!
 — Moto Club Online 🚗💨`;
         }
 
-        const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+        const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
         window.open(url, '_blank');
     };
 
     const handleStatusChange = (courier: Courier, newStatus: string) => {
+        // Validation for Shipped Status
+        if (newStatus === 'Shipped') {
+            if (!courier.trackingId || !courier.partnerId) {
+                if (window.confirm("Tracking ID and Courier Partner are required to mark as Shipped. Edit Order now?")) {
+                    onEdit && onEdit(courier);
+                }
+                return;
+            }
+        }
+
         onUpdate(courier.id, { status: newStatus });
 
         // Trigger WhatsApp logic
@@ -127,14 +137,39 @@ Thank you for shopping with us!
                             console.log('Share cancelled or failed', err);
                         }
                     } else {
-                        // Desktop: Force download
+                        // Desktop: Download Image
                         const link = document.createElement('a');
-                        link.download = `label-${courier.customerName}.png`;
+                        link.download = `label-${courier.customerName.replace(/[^a-z0-9]/gi, '_')}.png`;
                         link.href = URL.createObjectURL(blob);
-                        document.body.appendChild(link); // Append to body to ensure click works in Firefox
                         link.click();
-                        document.body.removeChild(link);
                     }
+
+                    // SEND SLIP TO ADMIN (Text Message) - Runs on BOTH Mobile and Desktop now
+                    const slipText = `🧾 *ORDER SLIP*
+----------------
+*Order ID:* ${courier.slipNo || 'Pending'}
+*Date:* ${new Date(courier.date).toLocaleDateString()}
+*Customer:* ${courier.customerName}
+*Phone:* ${courier.phoneNumber || 'N/A'}
+*Items:*
+${courier.products.map(p => `- ${p.name} (₹${p.price})`).join('\n')}
+${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
+----------------
+*Total Amount:* ₹${courier.totalPaid}
+*Address:* ${courier.address || 'N/A'}
+*Pincode:* ${courier.pincode || 'N/A'}
+----------------
+*Courier:* ${courier.partner?.name || 'N/A'}
+*Tracking:* ${courier.trackingId || 'Pending'}
+`;
+                    const encodedSlip = encodeURIComponent(slipText);
+                    const adminNumber = '919746247020';
+
+                    // Small delay to prevent conflict with Share sheet on mobile
+                    setTimeout(() => {
+                        window.open(`https://wa.me/${adminNumber}?text=${encodedSlip}`, '_blank');
+                    }, isMobile ? 1000 : 0);
+
                     setPrintCourier(null);
                 }, 'image/png');
             } catch (error) {
@@ -179,13 +214,13 @@ Thank you for shopping with us!
                                 <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
                                 <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Tracking</th>
                                 <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Products</th>
-                                {(user?.role === 'ADMIN' || user?.role === 'PARTNER') && (
+                                {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'PARTNER') && (
                                     <th className="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Unit / Wt</th>
                                 )}
                                 {user?.role !== 'PARTNER' && (
                                     <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Total Paid</th>
                                 )}
-                                {(user?.role === 'ADMIN' || user?.role === 'PARTNER') && (
+                                {user?.role === 'SUPER_ADMIN' && user?.role !== 'PARTNER' && (
                                     <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Courier Cost</th>
                                 )}
                                 <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
@@ -235,14 +270,14 @@ Thank you for shopping with us!
                                         {user?.role !== 'PARTNER' && (
                                             <td className="px-4 py-3 text-right text-sm font-bold text-gray-900" onClick={() => toggleRow(courier.id)}>
                                                 {isFieldVisible('totalPaid') && `₹${courier.totalPaid?.toFixed(2)}`}
-                                                {user?.role !== 'STAFF' && isFieldVisible('profit') && (
+                                                {user?.role === 'SUPER_ADMIN' && isFieldVisible('profit') && (
                                                     <div className={`text-xs ${courier.profit! >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                                         (P: {courier.profit?.toFixed(0)})
                                                     </div>
                                                 )}
                                             </td>
                                         )}
-                                        {(user?.role === 'ADMIN' || user?.role === 'PARTNER') && (
+                                        {user?.role === 'SUPER_ADMIN' && (
                                             <td className="px-4 py-3 text-right">
                                                 <input
                                                     type="number"
@@ -310,16 +345,17 @@ Thank you for shopping with us!
                                                 </>
                                             )}
                                             {user?.role === 'ADMIN' && (
-                                                <>
-                                                    <button onClick={(e) => { e.stopPropagation(); onEdit && onEdit(courier); }}
-                                                        className="text-white bg-blue-500 hover:bg-blue-600 rounded-full p-2 shadow-md transition-colors" title="Edit">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                                    </button>
-                                                    <button onClick={(e) => { e.stopPropagation(); if (confirm('Delete this courier?')) onDelete && onDelete(courier.id); }}
-                                                        className="text-white bg-red-500 hover:bg-red-600 rounded-full p-2 shadow-md transition-colors" title="Delete">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                    </button>
-                                                </>
+                                                <button onClick={(e) => { e.stopPropagation(); onEdit && onEdit(courier); }}
+                                                    className="text-white bg-blue-500 hover:bg-blue-600 rounded-full p-2 shadow-md transition-colors" title="Edit">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                                </button>
+                                            )}
+                                            {/* Only Super Admin Delete */}
+                                            {user?.role === 'SUPER_ADMIN' && (
+                                                <button onClick={(e) => { e.stopPropagation(); if (confirm('Delete this courier?')) onDelete && onDelete(courier.id); }}
+                                                    className="text-white bg-red-500 hover:bg-red-600 rounded-full p-2 shadow-md transition-colors" title="Delete">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
                                             )}
                                         </td>
                                     </tr>
@@ -335,7 +371,9 @@ Thank you for shopping with us!
                                                                     <li key={i} className="text-sm text-gray-700 flex justify-between border-b border-gray-50 pb-1">
                                                                         <span>{p.name}</span>
                                                                         {user?.role !== 'PARTNER' && (
-                                                                            <span className="text-gray-400 text-xs">Cost: ₹{p.cost} | Price: ₹{p.price}</span>
+                                                                            <span className="text-gray-400 text-xs">
+                                                                                {user?.role === 'SUPER_ADMIN' ? `Cost: ₹${p.cost} | ` : ''} Price: ₹{p.price}
+                                                                            </span>
                                                                         )}
                                                                     </li>
                                                                 ))}
@@ -356,7 +394,8 @@ Thank you for shopping with us!
 
                                                                 {courier.salesExecutive && (
                                                                     <p className="text-indigo-600 font-medium mt-2 bg-indigo-50 p-2 rounded-lg inline-block">
-                                                                        Sales Agent: {courier.salesExecutive.name} • Commission: ₹{courier.commissionAmount}
+                                                                        Sales Agent: {courier.salesExecutive.name}
+                                                                        {user?.role === 'SUPER_ADMIN' && ` • Commission: ₹${courier.commissionAmount}`}
                                                                     </p>
                                                                 )}
                                                             </div>
