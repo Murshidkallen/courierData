@@ -134,16 +134,21 @@ router.get('/stats', authenticateToken, async (req: any, res) => {
     }
 });
 
-router.get('/super-admin-stats', authenticateToken, async (req: any, res) => {
+router.get('/stats/super-admin', authenticateToken, async (req: any, res) => {
     try {
+        const user = req.user;
+        if (user.role !== 'SUPER_ADMIN') {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
         const { startDate, endDate } = req.query;
 
-        // Default to Current Month if no dates provided
+        // Date Range Logic
         const now = new Date();
+        // Default to current month if not specified
         const start = startDate ? new Date(String(startDate)) : new Date(now.getFullYear(), now.getMonth(), 1);
-        const end = endDate ? new Date(String(endDate)) : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        const end = endDate ? new Date(String(endDate)) : new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-        // Ensure start is beginning of day, end is end of day
         start.setHours(0, 0, 0, 0);
         end.setHours(23, 59, 59, 999);
 
@@ -152,61 +157,97 @@ router.get('/super-admin-stats', authenticateToken, async (req: any, res) => {
             lte: end
         };
 
+        // Fetch All Couriers in Range
         const couriers = await prisma.courier.findMany({
-            where: {
-                date: dateFilter
-            },
+            where: { date: dateFilter },
             include: {
-                products: true
+                partner: true
             }
         });
 
-        // Calculate Metrics
+        // --- 1. Global Metrics ---
         const totalOrders = couriers.length;
 
-        // Exclude Returned from Sales
-        const totalSaleAmount = couriers.reduce((sum, c) => {
+        // Revenue: Exclude Returned
+        const totalRevenue = couriers.reduce((sum, c) => {
             if (c.status === 'Returned') return sum;
             return sum + (c.totalPaid || 0);
         }, 0);
 
-        // Courier Cost Counts always (as per user: "courier cost will be exist and countable")
-        const totalCourierCost = couriers.reduce((sum, c) => sum + (c.courierCost || 0), 0);
+        // Profit: Account for Returned Loss
+        const totalProfit = couriers.reduce((sum, c) => {
+            if (c.status === 'Returned') {
+                return sum - (c.courierCost || 0); // Loss
+            }
+            return sum + (c.profit || 0);
+        }, 0);
 
-        // "Pending Costs" = Count of orders NOT Delivered or Returned
-        const pendingCount = couriers.filter(c =>
-            c.status !== 'Delivered' && c.status !== 'Returned'
-        ).length;
+        const activePartnersCount = new Set(couriers.map(c => c.partnerId).filter(Boolean)).size;
 
-        const returnedCount = couriers.filter(c => c.status === 'Returned').length;
+        // --- 2. Partner Performance ---
+        const partnerMap = new Map();
 
-        // Today's Activity (Created or Updated Today) - actually user asked "Today's Activity" in context of filter?
-        // Usually "Today's Activity" implies *Today* regardless of filter, OR activity within the filter range?
-        // Let's stick to strict "Today" for "Today's Activity" card as it usually implies immediate action.
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const todayEnd = new Date();
-        todayEnd.setHours(23, 59, 59, 999);
-
-        const todayActivityCount = await prisma.courier.count({
-            where: {
-                OR: [
-                    { createdAt: { gte: todayStart, lte: todayEnd } },
-                    { updatedAt: { gte: todayStart, lte: todayEnd } }
-                ]
+        couriers.forEach(c => {
+            if (!c.partner) return;
+            const pid = c.partner.id;
+            if (!partnerMap.has(pid)) {
+                partnerMap.set(pid, {
+                    id: pid,
+                    name: c.partner.name,
+                    orders: 0,
+                    revenue: 0,
+                    profit: 0
+                });
+            }
+            const p = partnerMap.get(pid);
+            p.orders += 1;
+            if (c.status !== 'Returned') {
+                p.revenue += (c.totalPaid || 0);
+                p.profit += (c.profit || 0);
+            } else {
+                p.profit -= (c.courierCost || 0);
             }
         });
 
-        const totalProducts = couriers.reduce((sum, c) => sum + c.products.length, 0);
+        const partnerPerformance = Array.from(partnerMap.values())
+            .sort((a: any, b: any) => b.orders - a.orders); // Sort by volume high to low
+
+        // --- 3. Chart Data (Daily Trend) ---
+        const chartData = [];
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        for (let i = 0; i <= diffDays; i++) {
+            const d = new Date(start);
+            d.setDate(d.getDate() + i);
+            const dayStr = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+
+            // Optimization: Filter from already fetched 'couriers' array mostly sorted by date usually, but filter is fine for reasonable size
+            const dayCouriers = couriers.filter(c => {
+                const cd = new Date(c.date);
+                return cd.getDate() === d.getDate() && cd.getMonth() === d.getMonth() && cd.getFullYear() === d.getFullYear();
+            });
+
+            const dayRevenue = dayCouriers.reduce((sum, c) => (c.status === 'Returned' ? sum : sum + (c.totalPaid || 0)), 0);
+            const dayProfit = dayCouriers.reduce((sum, c) => (c.status === 'Returned' ? sum - (c.courierCost || 0) : sum + (c.profit || 0)), 0);
+
+            chartData.push({
+                name: dayStr,
+                revenue: dayRevenue,
+                profit: dayProfit,
+                orders: dayCouriers.length
+            });
+        }
 
         res.json({
-            totalOrders,
-            totalSaleAmount,
-            totalCourierCost,
-            pendingCount,
-            returnedCount,
-            todayActivity: todayActivityCount,
-            totalProducts
+            metrics: {
+                totalOrders,
+                totalRevenue,
+                totalProfit,
+                activePartnersCount
+            },
+            partnerPerformance,
+            chartData
         });
 
     } catch (error) {

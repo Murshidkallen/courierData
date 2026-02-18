@@ -1,7 +1,7 @@
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../config';
-import { Edit2, Trash2, Plus, X } from 'lucide-react';
+import { Edit2, Trash2, Plus, X, User } from 'lucide-react';
 
 interface Partner {
     id: number;
@@ -15,6 +15,7 @@ interface Props {
 }
 
 const PartnerManager: React.FC<Props> = ({ onClose }) => {
+    const navigate = useNavigate();
     const [partners, setPartners] = useState<Partner[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [editing, setEditing] = useState<Partner | null>(null);
@@ -140,6 +141,13 @@ const PartnerManager: React.FC<Props> = ({ onClose }) => {
                                         </p>
                                     </div>
                                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => navigate(`/super-admin/profile/partner/${p.id}`)}
+                                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
+                                            title="View Profile"
+                                        >
+                                            <User className="w-4 h-4" />
+                                        </button>
                                         <button
                                             onClick={() => { setEditing(p); setNewName(p.name); setNewRate(String(p.rate || '')); }}
                                             className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded"

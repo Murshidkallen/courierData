@@ -15,13 +15,24 @@ router.get('/', authenticateToken, async (req, res) => {
         let where: any = {};
 
         if (search) {
-            where.OR = [
-                { trackingId: { contains: String(search) } },
-                { customerName: { contains: String(search) } },
-                { phoneNumber: { contains: String(search) } },
-                { slipNo: { contains: String(search) } },
-                { products: { some: { name: { contains: String(search) } } } }
-            ];
+            const searchTerms = String(search).trim().split(/\s+/).filter(Boolean);
+            if (searchTerms.length > 0) {
+                where.AND = searchTerms.map(term => ({
+                    OR: [
+                        { trackingId: { contains: term, mode: 'insensitive' } },
+                        { customerName: { contains: term, mode: 'insensitive' } },
+                        { phoneNumber: { contains: term, mode: 'insensitive' } },
+                        { slipNo: { contains: term, mode: 'insensitive' } },
+                        { address: { contains: term, mode: 'insensitive' } },
+                        { pincode: { contains: term, mode: 'insensitive' } },
+                        { status: { contains: term, mode: 'insensitive' } },
+                        { products: { some: { name: { contains: term, mode: 'insensitive' } } } },
+                        { salesExecutive: { name: { contains: term, mode: 'insensitive' } } },
+                        { partner: { name: { contains: term, mode: 'insensitive' } } },
+                        { enteredBy: { username: { contains: term, mode: 'insensitive' } } }
+                    ]
+                }));
+            }
         }
 
         if (startDate && endDate) {

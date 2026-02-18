@@ -90,6 +90,7 @@ model Invoice {
   salesExecutive   SalesExecutive? @relation(fields: [salesExecutiveId], references: [id])
   salesExecutiveId Int?
 
+  paymentMode      String?         // Cash, UPI, Bank Transfer
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 }
