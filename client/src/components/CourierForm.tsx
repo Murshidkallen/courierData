@@ -500,11 +500,13 @@ const CourierForm: React.FC<Props> = ({ onSubmit, initialData, onCancelEdit }) =
                         <input type="number" name="courierPaid" step="0.01" onChange={handleChange} value={formData.courierPaid || ''}
                             className="w-full rounded-lg border-gray-200 p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
                     </div>
-                    {user?.role === 'SUPER_ADMIN' && (
+                    {(user?.role === 'SUPER_ADMIN' || user?.role === 'PARTNER') && (
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Expense: Courier</label>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                {user?.role === 'PARTNER' ? 'Courier Charge' : 'Expense: Courier'}
+                            </label>
                             <input type="number" name="courierCost" step="0.01" onChange={handleChange} value={formData.courierCost || ''}
-                                className="w-full rounded-lg border-gray-200 p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-orange-50" />
+                                className={`w-full rounded-lg border-gray-200 p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none ${user?.role === 'SUPER_ADMIN' ? 'bg-orange-50' : 'bg-blue-50'}`} />
                         </div>
                     )}
                     <div>

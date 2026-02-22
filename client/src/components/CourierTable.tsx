@@ -220,7 +220,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                 {user?.role !== 'PARTNER' && (
                                     <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Total Paid</th>
                                 )}
-                                {((user?.role === 'SUPER_ADMIN') || (user?.role === 'PARTNER')) && (
+                                {(user?.role === 'SUPER_ADMIN' || user?.role === 'PARTNER') && (
                                     <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Courier Cost</th>
                                 )}
                                 <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
@@ -251,7 +251,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                                 {courier.products?.length || 0} Items
                                             </span>
                                         </td>
-                                        {(user?.role === 'ADMIN' || user?.role === 'PARTNER' || user?.role === 'SUPER_ADMIN') && (
+                                        {(user?.role === 'ADMIN' || user?.role === 'PARTNER') && (
                                             <td className="px-3 py-3">
                                                 <input
                                                     type="text"
@@ -277,7 +277,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                                 )}
                                             </td>
                                         )}
-                                        {((user?.role === 'SUPER_ADMIN') || (user?.role === 'PARTNER')) && (
+                                        {(user?.role === 'SUPER_ADMIN' || user?.role === 'PARTNER') && (
                                             <td className="px-4 py-3 text-right">
                                                 <input
                                                     type="number"
@@ -293,7 +293,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                             </td>
                                         )}
                                         <td className="px-4 py-3 text-center">
-                                            {(user?.role === 'ADMIN' || user?.role === 'PARTNER' || user?.role === 'SUPER_ADMIN') ? (
+                                            {(user?.role === 'ADMIN' || user?.role === 'PARTNER') ? (
                                                 <select
                                                     value={courier.status || 'Pending'}
                                                     onChange={(e) => handleStatusChange(courier, e.target.value)}
@@ -361,7 +361,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                     </tr>
                                     {expandedRow === courier.id && (
                                         <tr className="bg-gray-50/50">
-                                            <td colSpan={user?.role === 'SUPER_ADMIN' ? 9 : (user?.role === 'ADMIN' || user?.role === 'PARTNER' ? 8 : 7)} className="px-4 py-4">
+                                            <td colSpan={user?.role === 'ADMIN' || user?.role === 'PARTNER' ? 8 : 7} className="px-4 py-4">
                                                 <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-inner">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                         <div>
@@ -458,7 +458,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><path d="M6 14h12v8H6z"></path></svg>
                                         </button>
                                     )}
-                                    {user?.role === 'ADMIN' && (
+                                    {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
                                         <button onClick={(e) => { e.stopPropagation(); onEdit && onEdit(courier); }}
                                             className="bg-blue-500 text-white p-2 rounded-full shadow hover:bg-blue-600">
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>

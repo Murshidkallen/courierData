@@ -140,13 +140,15 @@ export default function BillingProfile() {
                             {stats?.details?.formula && <p className="text-xs text-green-600 mt-1">{stats.details.formula}</p>}
                         </div>
                         <div className="flex items-end">
-                            <button
-                                onClick={generateBill}
-                                disabled={!stats || stats.amount <= 0}
-                                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg shadow-md transition-all flex justify-center items-center gap-2"
-                            >
-                                <FileText className="w-5 h-5" /> Generate Bill
-                            </button>
+                            {user?.role !== 'PARTNER' && (
+                                <button
+                                    onClick={generateBill}
+                                    disabled={!stats || stats.amount <= 0}
+                                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg shadow-md transition-all flex justify-center items-center gap-2"
+                                >
+                                    <FileText className="w-5 h-5" /> Generate Bill
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

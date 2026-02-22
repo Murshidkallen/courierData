@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import CourierForm from './components/CourierForm'
 import CourierTable from './components/CourierTable'
 import Toast from './components/Toast'
@@ -13,16 +13,12 @@ import AdminBilling from './pages/AdminBilling';
 import MonthlySheet from './pages/MonthlySheet';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import SuperAdminAnalytics from './pages/SuperAdminAnalytics';
-import ProfilePage from './pages/ProfilePage';
-
-
-import { Settings, RefreshCw, Download, Plus, Calendar, User } from 'lucide-react';
+import { Settings, RefreshCw, Download, Plus, Calendar } from 'lucide-react';
 import { API_URL } from './config';
 import Modal from './components/Modal';
 
 function Dashboard() {
   const { user, logout, loading } = useAuth();
-  const navigate = useNavigate();
   const [couriers, setCouriers] = useState<Courier[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingCourier, setEditingCourier] = useState<Courier | null>(null);
@@ -125,6 +121,8 @@ function Dashboard() {
     setSearchTerm(e.target.value);
     fetchCouriers(e.target.value);
   };
+
+  // ... (Update/Delete handlers same) ...
 
   const handleUpdate = async (id: number, data: any) => {
     try {
@@ -307,10 +305,10 @@ function Dashboard() {
                   <Download className="w-5 h-5" />
                 </button>
 
-                {/* Billing Link - Hidden for Admin (Admin has separate Dashboard, but Super Admin needs access) */}
+                {/* Billing Link - Hidden for Admin */}
                 {user.role !== 'ADMIN' && (
                   <button
-                    onClick={() => navigate((user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') ? '/admin/billing' : '/billing')}
+                    onClick={() => window.location.href = user.role === 'ADMIN' ? '/admin/billing' : '/billing'}
                     className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors flex-shrink-0"
                     title="Billing"
                   >
@@ -327,14 +325,14 @@ function Dashboard() {
                   <RefreshCw className="w-5 h-5" />
                 </button>
 
-                {/* Profile Link - For Super Admin */}
+                {/* Settings - Hidden for Admin */}
                 {user.role === 'SUPER_ADMIN' && (
                   <button
-                    onClick={() => navigate('/super-admin/billing')}
+                    onClick={() => window.location.href = '/admin'}
                     className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors flex-shrink-0"
-                    title="Profile Overview"
+                    title="Admin Panel"
                   >
-                    <User className="w-5 h-5" />
+                    <Settings className="w-5 h-5" />
                   </button>
                 )}
               </div>
@@ -392,22 +390,22 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Dashboard />} />
           <Route path="/billing" element={
-            <RequireAuth roles={['PARTNER', 'STAFF', 'ADMIN', 'SUPER_ADMIN']}>
+            <RequireAuth roles={['PARTNER', 'STAFF', 'ADMIN']}>
               <BillingPage />
             </RequireAuth>
           } />
           <Route path="/admin" element={
-            <RequireAuth roles={['ADMIN', 'SUPER_ADMIN']}>
+            <RequireAuth roles={['ADMIN']}>
               <AdminDashboard />
             </RequireAuth>
           } />
           <Route path="/admin/billing" element={
-            <RequireAuth roles={['ADMIN', 'SUPER_ADMIN']}>
+            <RequireAuth roles={['ADMIN']}>
               <AdminBilling />
             </RequireAuth>
           } />
           <Route path="/admin/monthly" element={
-            <RequireAuth roles={['ADMIN', 'SUPER_ADMIN']}>
+            <RequireAuth roles={['ADMIN']}>
               <MonthlySheet />
             </RequireAuth>
           } />
@@ -419,11 +417,6 @@ function App() {
           <Route path="/super-admin/analytics" element={
             <RequireAuth roles={['SUPER_ADMIN']}>
               <SuperAdminAnalytics />
-            </RequireAuth>
-          } />
-          <Route path="/super-admin/profile/:type/:id" element={
-            <RequireAuth roles={['SUPER_ADMIN']}>
-              <ProfilePage />
             </RequireAuth>
           } />
         </Routes>

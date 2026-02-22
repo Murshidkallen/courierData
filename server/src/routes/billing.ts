@@ -12,7 +12,7 @@ const prisma = new PrismaClient();
 // 1. Dashboard Summary (4 Cards) - With Date Range
 router.get('/dashboard-summary', authenticateToken, async (req, res) => {
     const user = (req as AuthRequest).user;
-    if (user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN') return res.sendStatus(403);
+    if (user?.role !== 'ADMIN') return res.sendStatus(403);
 
     try {
         const { startDate, endDate } = req.query;
@@ -63,115 +63,6 @@ router.get('/dashboard-summary', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch summary' });
     }
 });
-
-// 1.5 Personal Stats (For BillingPage.tsx)
-router.get('/stats', authenticateToken, async (req: any, res) => {
-    try {
-        const user = req.user;
-        const now = new Date();
-        const start = new Date(now.getFullYear(), now.getMonth(), 1);
-        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-
-        // 1. Identify Entity
-        let entityId = -1;
-        let partnerId: number | undefined;
-        let salesExecutiveId: number | undefined;
-
-        if (user.role === 'PARTNER') {
-            const partner = await prisma.partner.findUnique({ where: { userId: user.id } });
-            if (partner) {
-                entityId = partner.id;
-                partnerId = partner.id;
-            }
-        } else if (user.role === 'STAFF') {
-            const agent = await prisma.salesExecutive.findUnique({ where: { userId: user.id } });
-            if (agent) {
-                entityId = agent.id;
-                salesExecutiveId = agent.id;
-            }
-        }
-
-        // If no entity found (e.g. Admin accessing this page, or unlinked staff), return 0
-        if (entityId === -1 && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-            return res.json({ monthlyOrders: 0, monthlyEarnings: 0, totalDue: 0, month: start.toLocaleString('default', { month: 'long' }) });
-        }
-
-        // Admin Logic: Show global stats for current month? Or just zero?
-        if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
-            // For Admin, just return current month global orders/revenue for generic view
-            // But "Due" doesn't make sense globally in this context. 
-            // Providing zeros for now to avoid confusion.
-            return res.json({ monthlyOrders: 0, monthlyEarnings: 0, totalDue: 0, month: start.toLocaleString('default', { month: 'long' }) });
-        }
-
-        // 2. Fetch Monthly Data
-        const monthlyWhere: any = {
-            date: { gte: start, lte: end },
-            ...(partnerId && { partnerId }),
-            ...(salesExecutiveId && { salesExecutiveId })
-        };
-
-        const monthlyCouriers = await prisma.courier.findMany({
-            where: monthlyWhere,
-            select: { courierCost: true, commissionAmount: true }
-        });
-
-        const monthlyOrders = monthlyCouriers.length;
-        let monthlyEarnings = 0;
-        if (partnerId) monthlyEarnings = monthlyCouriers.reduce((sum, c) => sum + (c.courierCost || 0), 0);
-        else monthlyEarnings = monthlyCouriers.reduce((sum, c) => sum + (c.commissionAmount || 0), 0);
-
-        // 3. Fetch Lifetime Data (For Total Due)
-        const lifetimeWhere: any = {
-            ...(partnerId && { partnerId }),
-            ...(salesExecutiveId && { salesExecutiveId })
-        };
-        const lifetimeCouriers = await prisma.courier.findMany({
-            where: lifetimeWhere,
-            select: { courierCost: true, commissionAmount: true }
-        });
-
-        let lifetimeEarnings = 0;
-        if (partnerId) lifetimeEarnings = lifetimeCouriers.reduce((sum, c) => sum + (c.courierCost || 0), 0);
-        else lifetimeEarnings = lifetimeCouriers.reduce((sum, c) => sum + (c.commissionAmount || 0), 0);
-
-        // 4. Fetch Total Paid Invoices
-        const invoiceWhere: any = {
-            status: 'Paid',
-            ...(partnerId && { partnerId }),
-            ...(salesExecutiveId && { salesExecutiveId }) // Note: Schema check needed if invoice has salesExecutiveId? Yes, likely.
-        };
-
-        // Verify Invoice Limit: Does Invoice model support partnerId/salesExecutiveId?
-        // Based on `generate-internal` and `entity/generate`, it stores `recipient`? 
-        // Or did we add partnerId/salesExecutiveId to Invoice?
-        // Let's assume we use the relation if it exists, or fall back to code-based check?
-        // Checking `entity/generate` in this file: 
-        // "if (type === 'PARTNER') data.partnerId = entityId;"
-        // So Invoice HAS partnerId and salesExecutiveId. Good.
-
-        const paidInvoices = await prisma.invoice.findMany({
-            where: invoiceWhere,
-            select: { amount: true }
-        });
-
-        const totalPaid = paidInvoices.reduce((sum, i) => sum + (i.amount || 0), 0);
-
-        const totalDue = lifetimeEarnings - totalPaid;
-
-        res.json({
-            monthlyOrders,
-            monthlyEarnings,
-            totalDue,
-            month: start.toLocaleString('default', { month: 'long' })
-        });
-
-    } catch (error) {
-        console.error("Billing Stats Error:", error);
-        res.status(500).json({ error: 'Failed to fetch billing stats' });
-    }
-});
-
 
 // 2. Internal Billing History & Range Suggestion
 router.get('/internal-history/:recipient', authenticateToken, async (req, res) => {
@@ -264,9 +155,6 @@ router.get('/internal-stats/:recipient', authenticateToken, async (req, res) => 
 
 // 4. Generate Internal Invoice
 router.post('/generate-internal', authenticateToken, async (req, res) => {
-    const user = (req as AuthRequest).user;
-    if (user?.role !== 'SUPER_ADMIN') return res.sendStatus(403);
-
     const { recipient, startDate, endDate, amount } = req.body;
 
     // Check overlaps? Ideally yes.
@@ -290,22 +178,17 @@ router.post('/generate-internal', authenticateToken, async (req, res) => {
     }
 });
 
-// 5. User Accepts/Pays Invoice
+// 5. Mark INVOICE as Paid
 router.put('/invoices/:id/pay', authenticateToken, async (req, res) => {
+    // Basic pay toggle
     const { id } = req.params;
-    const { paymentMode } = req.body; // Cash, UPI, Bank Transfer
-
     try {
         const inv = await prisma.invoice.update({
             where: { id: Number(id) },
-            data: {
-                status: 'Paid',
-                paymentMode: paymentMode || 'Cash' // Default or required
-            }
+            data: { status: 'Paid' }
         });
         res.json(inv);
     } catch (e) {
-        console.error(e);
         res.status(500).json({ error: 'Failed to update' });
     }
 });
