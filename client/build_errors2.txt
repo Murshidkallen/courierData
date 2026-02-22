@@ -1,0 +1,3 @@
+﻿src/pages/ProfilePage.tsx(6,31): error TS6133: 'Calendar' is declared but its value is never read.
+src/pages/ProfilePage.tsx(6,41): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/ProfilePage.tsx(6,48): error TS6133: 'Download' is declared but its value is never read.

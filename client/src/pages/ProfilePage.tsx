@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { API_URL } from '../config';
-import { ArrowLeft, FileText, Calendar, Clock, Download, RefreshCw } from 'lucide-react';
+import { ArrowLeft, FileText, RefreshCw } from 'lucide-react';
 
 export default function BillingProfile() {
     const { type, id } = useParams(); // type: 'internal', 'partner', 'agent'
