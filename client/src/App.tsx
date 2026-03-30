@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import CourierForm from './components/CourierForm'
 import CourierTable from './components/CourierTable'
 import Toast from './components/Toast'
@@ -13,12 +13,15 @@ import AdminBilling from './pages/AdminBilling';
 import MonthlySheet from './pages/MonthlySheet';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import SuperAdminAnalytics from './pages/SuperAdminAnalytics';
-import { Settings, RefreshCw, Download, Plus, Calendar } from 'lucide-react';
+import { Settings, RefreshCw, Plus, Calendar, FileText } from 'lucide-react';
 import { API_URL } from './config';
 import Modal from './components/Modal';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 function Dashboard() {
   const { user, logout, loading } = useAuth();
+  const navigate = useNavigate();
   const [couriers, setCouriers] = useState<Courier[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingCourier, setEditingCourier] = useState<Courier | null>(null);
@@ -35,8 +38,11 @@ function Dashboard() {
   // Default dates logic
   useEffect(() => {
     const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const start = `${y}-${m}-01`;
+    const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+    const end = `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
     setStartDate(start);
     setEndDate(end);
   }, []);
@@ -58,36 +64,55 @@ function Dashboard() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const downloadCSV = () => {
+  const downloadPDF = () => {
     if (!couriers.length) return showToast("No data to download", 'error');
 
-    const headers = ['Date', 'Slip No', 'Customer', 'Phone', 'Tracking ID', 'Address', 'Pincode', 'Status', 'Total Paid', 'Courier Cost', 'Profit', 'Partner', 'Agent'];
+    const doc = new jsPDF('landscape');
+    const headers = ['Date', 'Slip No', 'Customer', 'Phone', 'Tracking ID', 'Products', 'Address', 'Pin', 'Status', 'Paid', 'Prod Cost', 'Cour Cost', 'Profit', 'Partner', 'Agent'];
+
     const rows = couriers.map(c => [
       new Date(c.date).toLocaleDateString(),
-      c.slipNo,
+      c.slipNo || '-',
       c.customerName,
-      c.phoneNumber,
-      c.trackingId,
-      `"${c.address || ''}"`, // Quote address to handle commas
-      c.pincode,
-      c.status,
-      c.totalPaid,
-      c.courierCost,
-      c.profit,
-      c.partner?.name || '',
-      c.salesExecutive?.name || ''
+      c.phoneNumber || '-',
+      c.trackingId || '-',
+      c.products?.map?.(p => p.name).join(', ') || '-',
+      c.address || '-',
+      c.pincode || '-',
+      c.status || '-',
+      c.totalPaid || 0,
+      c.products?.reduce?.((acc, p) => acc + (Number(p.cost) || 0), 0) || 0,
+      c.courierCost || 0,
+      c.profit || 0,
+      c.partner?.name || '-',
+      c.salesExecutive?.name || '-'
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    // Title
+    doc.setFontSize(14);
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `courier_data_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const getLocalToday = () => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    const activeStart = dateRange.start || startDate || getLocalToday();
+    const activeEnd = dateRange.end || endDate || getLocalToday();
+
+    doc.text(`Courier Data Report (${activeStart} to ${activeEnd})`, 14, 15);
+
+    autoTable(doc, {
+      head: [headers],
+      body: rows,
+      startY: 20,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [79, 70, 229] }, // Indigo-600
+      columnStyles: {
+        5: { cellWidth: 35 }, // Products might be long
+        6: { cellWidth: 35 }  // Address
+      }
+    });
+
+    doc.save(`courier_data_${activeStart}_to_${activeEnd}.pdf`);
   };
 
   const fetchCouriers = async (search = '') => {
@@ -298,17 +323,17 @@ function Dashboard() {
               <div className="flex items-center space-x-2">
                 {/* Download Button */}
                 <button
-                  onClick={downloadCSV}
-                  className="p-2 text-green-600 hover:bg-green-50 rounded-full transition-colors flex-shrink-0"
-                  title="Download CSV"
+                  onClick={downloadPDF}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors flex-shrink-0"
+                  title="Download PDF"
                 >
-                  <Download className="w-5 h-5" />
+                  <FileText className="w-5 h-5" />
                 </button>
 
-                {/* Billing Link - Hidden for Admin */}
-                {user.role !== 'ADMIN' && (
+                {/* Billing Link */}
+                {user && (
                   <button
-                    onClick={() => window.location.href = user.role === 'ADMIN' ? '/admin/billing' : '/billing'}
+                    onClick={() => navigate('/billing')}
                     className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors flex-shrink-0"
                     title="Billing"
                   >
@@ -325,12 +350,34 @@ function Dashboard() {
                   <RefreshCw className="w-5 h-5" />
                 </button>
 
-                {/* Settings - Hidden for Admin */}
-                {user.role === 'SUPER_ADMIN' && (
+                {/* Invoice Management Link */}
+                {['SUPER_ADMIN', 'ADMIN'].includes(user?.role) && (
                   <button
-                    onClick={() => window.location.href = '/admin'}
+                    onClick={() => navigate('/admin/billing')}
                     className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors flex-shrink-0"
-                    title="Admin Panel"
+                    title="Invoice Management"
+                  >
+                    <span className="text-xl">🧾</span>
+                  </button>
+                )}
+
+                {/* Monthly Sheet Link */}
+                {['SUPER_ADMIN', 'ADMIN'].includes(user?.role) && (
+                  <button
+                    onClick={() => navigate('/admin/monthly')}
+                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors flex-shrink-0"
+                    title="Monthly Sheet"
+                  >
+                    <span className="text-xl">📊</span>
+                  </button>
+                )}
+
+                {/* Settings / Admin Panel */}
+                {['SUPER_ADMIN', 'ADMIN'].includes(user.role) && (
+                  <button
+                    onClick={() => navigate(user.role === 'SUPER_ADMIN' ? '/super-admin' : '/admin')}
+                    className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors flex-shrink-0"
+                    title="Admin Settings"
                   >
                     <Settings className="w-5 h-5" />
                   </button>
@@ -390,7 +437,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Dashboard />} />
           <Route path="/billing" element={
-            <RequireAuth roles={['PARTNER', 'STAFF', 'ADMIN']}>
+            <RequireAuth roles={['PARTNER', 'STAFF', 'ADMIN', 'SUPER_ADMIN']}>
               <BillingPage />
             </RequireAuth>
           } />
@@ -400,7 +447,7 @@ function App() {
             </RequireAuth>
           } />
           <Route path="/admin/billing" element={
-            <RequireAuth roles={['ADMIN']}>
+            <RequireAuth roles={['ADMIN', 'SUPER_ADMIN']}>
               <AdminBilling />
             </RequireAuth>
           } />

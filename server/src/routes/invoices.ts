@@ -12,7 +12,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
     try {
         const where: any = {};
-        if (user.role !== 'ADMIN') {
+        if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
             where.userId = user.id;
         }
 
@@ -50,10 +50,10 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 });
 
-// Update Invoice Status (Admin Only)
+// Update Invoice Status (Admin & Super Admin)
 router.put('/:id', authenticateToken, async (req, res) => {
     const user = (req as AuthRequest).user;
-    if (user?.role !== 'ADMIN') return res.sendStatus(403);
+    if (user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN') return res.sendStatus(403);
 
     try {
         const { status } = req.body;

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { Courier } from '../types';
-import { ArrowLeft, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../config';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const MonthlySheet = () => {
     const navigate = useNavigate();
@@ -18,8 +20,10 @@ const MonthlySheet = () => {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth(); // 0-11
 
-        const start = new Date(year, month, 1).toISOString();
-        const end = new Date(year, month + 1, 0).toISOString();
+        const m = String(month + 1).padStart(2, '0');
+        const start = `${year}-${m}-01`;
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const end = `${year}-${m}-${String(lastDay).padStart(2, '0')}`;
 
         try {
             const res = await fetch(`${API_URL}/api/couriers?startDate=${start}&endDate=${end}`, {
@@ -36,32 +40,39 @@ const MonthlySheet = () => {
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1));
     };
 
-    const exportToCSV = () => {
-        const headers = ['Date', 'Slip', 'Tracking', 'Customer', 'Phone', 'Items', 'Total Paid', 'Cost', 'Status', 'Partner'];
+    const exportToPDF = () => {
+        const doc = new jsPDF('landscape');
+        const headers = ['Date', 'Slip', 'Tracking', 'Customer', 'Phone', 'Products', 'Paid', 'Prod Cost', 'Cour Cost', 'Status', 'Partner'];
+
         const rows = couriers.map(c => [
             new Date(c.date).toLocaleDateString(),
-            c.slipNo || '',
-            c.trackingId,
+            c.slipNo || '-',
+            c.trackingId || '-',
             c.customerName,
-            c.phoneNumber || '',
-            c.products.map(p => p.name).join(', '),
-            c.totalPaid,
-            c.courierCost,
-            c.status,
-            c.partner?.name || ''
+            c.phoneNumber || '-',
+            c.products?.map(p => p.name).join(', ') || '-',
+            c.totalPaid || 0,
+            c.products?.reduce((acc, p) => acc + (Number(p.cost) || 0), 0) || 0,
+            c.courierCost || 0,
+            c.status || '-',
+            c.partner?.name || '-'
         ]);
 
-        const csvContent = "data:text/csv;charset=utf-8,"
-            + headers.join(",") + "\n"
-            + rows.map(e => e.join(",")).join("\n");
+        doc.setFontSize(14);
+        doc.text(`Monthly Sheet - ${currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}`, 14, 15);
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `monthly_sheet_${currentDate.getMonth() + 1}_${currentDate.getFullYear()}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        autoTable(doc, {
+            head: [headers],
+            body: rows,
+            startY: 20,
+            styles: { fontSize: 8, cellPadding: 2 },
+            headStyles: { fillColor: [79, 70, 229] }, // Indigo
+            columnStyles: {
+                5: { cellWidth: 60 } // Products column width
+            }
+        });
+
+        doc.save(`monthly_sheet_${currentDate.getMonth() + 1}_${currentDate.getFullYear()}.pdf`);
     };
 
     return (
@@ -89,9 +100,9 @@ const MonthlySheet = () => {
                         <ChevronRight className="w-4 h-4 text-gray-600" />
                     </button>
                     <div className="h-6 w-px bg-gray-300 mx-2"></div>
-                    <button onClick={exportToCSV} className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors font-medium">
-                        <Download className="w-4 h-4" />
-                        Export CSV
+                    <button onClick={exportToPDF} className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors font-medium">
+                        <FileText className="w-4 h-4" />
+                        Export PDF
                     </button>
                 </div>
             </div>

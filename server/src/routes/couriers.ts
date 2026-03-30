@@ -36,9 +36,17 @@ router.get('/', authenticateToken, async (req, res) => {
         }
 
         if (startDate && endDate) {
+            const parsedStart = new Date(String(startDate));
+            const parsedEnd = new Date(String(endDate));
+            
+            // If the date string is just YYYY-MM-DD, we should span the whole day
+            if (String(endDate).length <= 10) {
+                parsedEnd.setUTCHours(23, 59, 59, 999);
+            }
+
             where.date = {
-                gte: new Date(String(startDate)),
-                lte: new Date(String(endDate))
+                gte: parsedStart,
+                lte: parsedEnd
             };
         }
 
@@ -77,35 +85,67 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { products, salesExecutiveId, partnerId, status, ...data } = req.body;
 
-    if (['Packed', 'Shipped', 'Sent'].includes(status)) {
-        let tid = data.trackingId;
-        let pid = partnerId;
+    try {
+        const existing = await prisma.courier.findUnique({
+            where: { id: Number(id) },
+            include: { products: true, salesExecutive: true }
+        });
 
-        // If missing, fetch from DB to validate
-        if (!tid || !pid) {
-            const existing = await prisma.courier.findUnique({ where: { id: Number(id) } });
-            if (existing) {
-                if (!tid) tid = existing.trackingId;
-                if (!pid) pid = existing.partnerId;
+        if (!existing) return res.status(404).json({ error: 'Courier not found' });
+
+        if (['Packed', 'Shipped', 'Sent'].includes(status)) {
+            let tid = data.trackingId || existing.trackingId;
+            let pid = partnerId !== undefined ? partnerId : existing.partnerId;
+
+            if (tid && String(tid).startsWith('TEMP-')) {
+                return res.status(400).json({ error: 'Real Tracking ID is required to change status.' });
+            }
+            if (!pid) {
+                return res.status(400).json({ error: 'Courier Service (Partner) is required.' });
             }
         }
 
-        if (tid && String(tid).startsWith('TEMP-')) {
-            return res.status(400).json({ error: 'Real Tracking ID is required to change status.' });
-        }
-        if (!pid) {
-            return res.status(400).json({ error: 'Courier Service (Partner) is required.' });
-        }
-    }
+        // Recalculate profit and commission to ensure consistency
+        const newTotalPaid = data.totalPaid !== undefined ? Number(data.totalPaid) : (existing.totalPaid || 0);
+        const newCourierCost = data.courierCost !== undefined ? Number(data.courierCost) : (existing.courierCost || 0);
+        const newPackingCost = data.packingCost !== undefined ? Number(data.packingCost) : (existing.packingCost || 0);
 
-    try {
+        let newProductsCost = 0;
+        if (products) {
+            newProductsCost = products.reduce((acc: number, p: any) => acc + (Number(p.cost) || 0), 0);
+        } else {
+            newProductsCost = existing.products.reduce((acc, p) => acc + (Number(p.cost) || 0), 0);
+        }
+
+        const calculatedProfit = newTotalPaid - (newProductsCost + newCourierCost + newPackingCost);
+
+        let finalCommissionPct = existing.commissionPct || 0;
+        if (salesExecutiveId !== undefined) {
+            if (salesExecutiveId) {
+                const exec = await prisma.salesExecutive.findUnique({ where: { id: Number(salesExecutiveId) } });
+                if (exec) finalCommissionPct = exec.rate;
+            } else {
+                finalCommissionPct = 0;
+            }
+        }
+
+        const finalCommissionAmount = calculatedProfit * (finalCommissionPct / 100);
+
+        // Remove profit and commission from data if they were passed, so we use our calculated ones
+        delete (data as any).profit;
+        delete (data as any).commissionAmount;
+        delete (data as any).commissionPct;
+
         const result = await prisma.courier.update({
             where: { id: Number(id) },
             data: {
                 ...data,
-                status,
+                status: status !== undefined ? status : existing.status,
                 salesExecutiveId: salesExecutiveId !== undefined ? (salesExecutiveId ? Number(salesExecutiveId) : null) : undefined,
                 partnerId: partnerId !== undefined ? (partnerId ? Number(partnerId) : null) : undefined,
+                profit: calculatedProfit,
+                commissionPct: finalCommissionPct,
+                commissionAmount: finalCommissionAmount,
                 products: products ? {
                     deleteMany: {},
                     create: products.map((p: any) => ({

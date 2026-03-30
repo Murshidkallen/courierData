@@ -8,7 +8,58 @@ const prisma = new PrismaClient();
 // 1. Dashboard Summary (4 Cards) - GLOBAL TOTALS (Lifetime?)
 // User likely wants Lifetime totals for the cards, or maybe "Current Month"?
 // Let's assume Lifetime for "Stats" unless specified. 
-// "Moto Club (50% of exact profit)" usually implies total standing.
+// 0. The Missing User Billing Stats
+router.get('/stats', authenticateToken, async (req, res) => {
+    const user = (req as AuthRequest).user;
+    if (!user) return res.sendStatus(403);
+
+    try {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+        let where: any = { date: { gte: start, lte: end } };
+
+        if (user.role === 'PARTNER') {
+            const partnerProfile = await prisma.partner.findUnique({ where: { userId: user.id } });
+            if (partnerProfile) where.partnerId = partnerProfile.id;
+            else return res.json({ ordersCount: 0, totalAmount: 0, month: now.toLocaleString('default', { month: 'long', year: 'numeric' }) });
+        } else if (user.role === 'STAFF') {
+            const agentProfile = await prisma.salesExecutive.findUnique({ where: { userId: user.id } });
+            if (agentProfile) where.salesExecutiveId = agentProfile.id;
+            else return res.json({ ordersCount: 0, totalAmount: 0, month: now.toLocaleString('default', { month: 'long', year: 'numeric' }) });
+        }
+
+        const couriers = await prisma.courier.findMany({
+            where,
+            select: { courierCost: true, commissionAmount: true }
+        });
+
+        const ordersCount = couriers.length;
+        let totalAmount = 0;
+
+        if (user.role === 'PARTNER') {
+            totalAmount = couriers.reduce((acc, c) => acc + (c.courierCost || 0), 0);
+        } else if (user.role === 'STAFF') {
+            totalAmount = couriers.reduce((acc, c) => acc + (c.commissionAmount || 0), 0);
+        } else {
+            // ADMIN / SUPER_ADMIN global total pending layout
+            totalAmount = couriers.reduce((acc, c) => acc + (c.courierCost || 0) + (c.commissionAmount || 0), 0);
+        }
+
+        res.json({
+            ordersCount,
+            totalAmount,
+            month: now.toLocaleString('default', { month: 'long', year: 'numeric' })
+        });
+    } catch (error) {
+        console.error("Billing Stats Error:", error);
+        res.status(500).json({ error: 'Failed to fetch billing stats' });
+    }
+});
+
+// 1. Dashboard Summary (4 Cards) - With Date Range
 // 1. Dashboard Summary (4 Cards) - With Date Range
 router.get('/dashboard-summary', authenticateToken, async (req, res) => {
     const user = (req as AuthRequest).user;

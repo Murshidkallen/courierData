@@ -293,7 +293,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                             </td>
                                         )}
                                         <td className="px-4 py-3 text-center">
-                                            {(user?.role === 'ADMIN' || user?.role === 'PARTNER') ? (
+                                            {(user?.role === 'ADMIN' || user?.role === 'PARTNER' || user?.role === 'SUPER_ADMIN') ? (
                                                 <select
                                                     value={courier.status || 'Pending'}
                                                     onChange={(e) => handleStatusChange(courier, e.target.value)}
@@ -543,7 +543,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                         </div>
                                     )}
 
-                                    {(user?.role === 'ADMIN' || user?.role === 'PARTNER') && (
+                                    {(user?.role === 'ADMIN' || user?.role === 'PARTNER' || user?.role === 'SUPER_ADMIN') && (
                                         <div className="mt-4 pt-3 border-t border-gray-200">
                                             <div className="flex justify-between items-center mb-2">
                                                 <label className="text-xs font-bold text-gray-500 block">Update Status</label>

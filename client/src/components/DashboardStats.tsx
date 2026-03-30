@@ -38,10 +38,12 @@ const DashboardStats: React.FC<Props> = ({ externalDateRange }) => {
         // If external provided, do nothing (parent controls)
         if (externalDateRange) return;
 
-        // Default to Current Month if no external
         const now = new Date();
-        const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const start = `${y}-${m}-01`;
+        const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+        const end = `${y}-${m}-${String(lastDay).padStart(2, '0')}`;
         setInternalDateRange({ start, end });
     }, [externalDateRange]);
 
@@ -57,9 +59,13 @@ const DashboardStats: React.FC<Props> = ({ externalDateRange }) => {
             start.setDate(end.getDate() - daysOrMode);
         }
 
+        const formatLocal = (d: Date) => {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        };
+
         setInternalDateRange({
-            start: start.toISOString().split('T')[0],
-            end: end.toISOString().split('T')[0]
+            start: formatLocal(start),
+            end: formatLocal(end)
         });
         setIsPresetOpen(false);
     };

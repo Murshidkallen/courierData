@@ -14,9 +14,13 @@ export default function BillingProfile() {
     const [stats, setStats] = useState<any>(null);
     const [history, setHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [dateRange, setDateRange] = useState({
-        start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-        end: new Date().toISOString().split('T')[0]
+    const [dateRange, setDateRange] = useState(() => {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const start = `${y}-${m}-01`;
+        const end = `${y}-${m}-${String(d.getDate()).padStart(2, '0')}`;
+        return { start, end };
     });
 
     const entityName = type === 'internal' ? id : (stats?.name || 'Loading...');

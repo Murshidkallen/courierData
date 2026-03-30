@@ -1,0 +1,35 @@
+﻿d945ffe Fix ProfilePage.tsx TypeScript build error
+dc988e7 Update courier cost column and fix deployment errors
+9e49ab0 Implement Invoice Notification and Payment Acceptance
+f0a0599 Fix TypeScript Deployment Errors
+4e25dd6 Refine Admin Dashboard, Validation, Slip Feature
+aae888f Fix mobile status updates, improve server logging, and add local debug scripts
+a444a5e Fix client build error: remove unused React import in ShippingLabel.tsx
+26feabe Update server scripts: restore_orphans and find_missing_couriers
+26bf3ad Fix: Force download label on desktop
+efa6392 Fix: html2canvas oklch color error
+2b8ed79 Feat: Shipping Label Generation & Sharing
+bc97be5 Fix: Mobile Partner Cost Inline Editing
+f9e2e1a UI Optimization: Mobile Header, Form Single-Column, Dashboard Stats
+f8d8ba1 Refactor: Modularize server routes and fix frontend logout bug
+35b09a0 Fix Express 5 wildcard syntax for OPTIONS route
+dc8ba13 Fix Vercel Build: Run prisma generate on build
+9f254f0 Add health check endpoint for debugging
+d970399 Fix CORS: Force headers via vercel.json for reliability
+be991f1 Fix CORS: Remove duplicate vercel.json headers and handle preflight
+c9b3cea Fix CORS: Remove credentials requirement to allow wildcard origin
+6c7d0e2 Fix Vercel build: Add public folder
+6631b6c Update courier data system with recent changes
+8948283 Feat: Mobile UI Optimization
+2b7c6e9 Feat: Simplify Staff Entry and Enforce Validation
+df09b94 Fix: Add missing POST /api/partners route
+fd8a185 Fix: Preserve partnerId on update and fix Date input
+dbf6016 Fix: Auto-assign partnerId on courier creation
+5ab7282 Fix Build: Correct AdminDashboard imports and UserForm types
+8a810c2 Implement Partner CRUD and User Linking
+3b544a4 Fix AuthContext imports and add Viewer role
+d3caacc Fix Vercel output directory
+5b8e38a Fix AuthContext import
+2b1c1d6 Fix build warning
+3d24188 Fix Vercel configuration
+d96eb9d Initial commit
