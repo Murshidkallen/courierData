@@ -63,7 +63,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
 // 1. Dashboard Summary (4 Cards) - With Date Range
 router.get('/dashboard-summary', authenticateToken, async (req, res) => {
     const user = (req as AuthRequest).user;
-    if (user?.role !== 'ADMIN') return res.sendStatus(403);
+    if (user?.role !== 'ADMIN' && user?.role !== 'SUPER_ADMIN') return res.sendStatus(403);
 
     try {
         const { startDate, endDate } = req.query;

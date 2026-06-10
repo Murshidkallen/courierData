@@ -63,30 +63,48 @@ function Dashboard() {
   }, [startDate, endDate]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPdfDropdownOpen, setIsPdfDropdownOpen] = useState(false);
 
-  const downloadPDF = () => {
+  const downloadPDF = (mode: 'full' | 'short') => {
     if (!couriers.length) return showToast("No data to download", 'error');
 
     const doc = new jsPDF('landscape');
-    const headers = ['Date', 'Slip No', 'Customer', 'Phone', 'Tracking ID', 'Products', 'Address', 'Pin', 'Status', 'Paid', 'Prod Cost', 'Cour Cost', 'Profit', 'Partner', 'Agent'];
-
-    const rows = couriers.map(c => [
+    
+    let head = ['Date', 'Slip No', 'Customer', 'Phone', 'Tracking ID', 'Products', 'Address', 'Pin', 'Status', 'Paid', 'Prod Cost', 'Cour Cost', 'Profit', 'Partner', 'Agent'];
+    let rowMapper = (c: any) => [
       new Date(c.date).toLocaleDateString(),
       c.slipNo || '-',
       c.customerName,
       c.phoneNumber || '-',
       c.trackingId || '-',
-      c.products?.map?.(p => p.name).join(', ') || '-',
+      c.products?.map?.((p: any) => p.name).join(', ') || '-',
       c.address || '-',
       c.pincode || '-',
       c.status || '-',
       c.totalPaid || 0,
-      c.products?.reduce?.((acc, p) => acc + (Number(p.cost) || 0), 0) || 0,
+      c.products?.reduce?.((acc: number, p: any) => acc + (Number(p.cost) || 0), 0) || 0,
       c.courierCost || 0,
       c.profit || 0,
       c.partner?.name || '-',
       c.salesExecutive?.name || '-'
-    ]);
+    ];
+
+    if (mode === 'short') {
+      head = ['Date', 'Customer', 'Phone', 'Products', 'Address', 'Paid', 'Prod Cost', 'Cour Cost', 'Profit'];
+      rowMapper = (c: any) => [
+        new Date(c.date).toLocaleDateString(),
+        c.customerName,
+        c.phoneNumber || '-',
+        c.products?.map?.((p: any) => p.name).join(', ') || '-',
+        c.address || '-',
+        c.totalPaid || 0,
+        c.products?.reduce?.((acc: number, p: any) => acc + (Number(p.cost) || 0), 0) || 0,
+        c.courierCost || 0,
+        c.profit || 0
+      ];
+    }
+
+    const rows = couriers.map(rowMapper);
 
     // Title
     doc.setFontSize(14);
@@ -101,14 +119,17 @@ function Dashboard() {
     doc.text(`Courier Data Report (${activeStart} to ${activeEnd})`, 14, 15);
 
     autoTable(doc, {
-      head: [headers],
+      head: [head],
       body: rows,
       startY: 20,
       styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [79, 70, 229] }, // Indigo-600
-      columnStyles: {
-        5: { cellWidth: 35 }, // Products might be long
+      columnStyles: mode === 'full' ? {
+        5: { cellWidth: 35 }, // Products
         6: { cellWidth: 35 }  // Address
+      } : {
+        3: { cellWidth: 45 }, // Products in short mode
+        4: { cellWidth: 45 }  // Address in short mode
       }
     });
 
@@ -322,13 +343,22 @@ function Dashboard() {
             <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4">
               <div className="flex items-center space-x-2">
                 {/* Download Button */}
-                <button
-                  onClick={downloadPDF}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors flex-shrink-0"
-                  title="Download PDF"
-                >
-                  <FileText className="w-5 h-5" />
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsPdfDropdownOpen(!isPdfDropdownOpen)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors flex-shrink-0"
+                    title="Download PDF"
+                  >
+                    <FileText className="w-5 h-5" />
+                  </button>
+                  {isPdfDropdownOpen && (
+                    <div className="absolute top-10 right-0 md:left-0 mt-2 w-32 bg-white rounded shadow-xl border border-gray-100 py-1 z-50">
+                      <button onClick={() => { downloadPDF('full'); setIsPdfDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-medium">Full</button>
+                      <button onClick={() => { downloadPDF('short'); setIsPdfDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-medium">Short</button>
+                    </div>
+                  )}
+                  {isPdfDropdownOpen && <div className="fixed inset-0 z-40" onClick={() => setIsPdfDropdownOpen(false)}></div>}
+                </div>
 
                 {/* Billing Link */}
                 {user && (
@@ -373,9 +403,9 @@ function Dashboard() {
                 )}
 
                 {/* Settings / Admin Panel */}
-                {['SUPER_ADMIN', 'ADMIN'].includes(user.role) && (
+                {user.role === 'SUPER_ADMIN' && (
                   <button
-                    onClick={() => navigate(user.role === 'SUPER_ADMIN' ? '/super-admin' : '/admin')}
+                    onClick={() => navigate('/super-admin')}
                     className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors flex-shrink-0"
                     title="Admin Settings"
                   >
@@ -442,7 +472,7 @@ function App() {
             </RequireAuth>
           } />
           <Route path="/admin" element={
-            <RequireAuth roles={['ADMIN']}>
+            <RequireAuth roles={['SUPER_ADMIN']}>
               <AdminDashboard />
             </RequireAuth>
           } />
@@ -452,7 +482,7 @@ function App() {
             </RequireAuth>
           } />
           <Route path="/admin/monthly" element={
-            <RequireAuth roles={['ADMIN']}>
+            <RequireAuth roles={['ADMIN', 'SUPER_ADMIN']}>
               <MonthlySheet />
             </RequireAuth>
           } />

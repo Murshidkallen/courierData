@@ -33,7 +33,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Update Partner (Rename) - Admin Only
-router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req, res) => {
+router.put('/:id', authenticateToken, requireRole(['SUPER_ADMIN']), async (req, res) => {
     const { id } = req.params;
     const { name, rate } = req.body;
 
@@ -49,7 +49,7 @@ router.put('/:id', authenticateToken, requireRole(['ADMIN']), async (req, res) =
 });
 
 // Delete Partner - Admin Only
-router.delete('/:id', authenticateToken, requireRole(['ADMIN']), async (req, res) => {
+router.delete('/:id', authenticateToken, requireRole(['SUPER_ADMIN']), async (req, res) => {
     const { id } = req.params;
 
     try {

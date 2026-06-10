@@ -7,7 +7,7 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 // Get all users
-router.get('/users', authenticateToken, requireRole(['ADMIN']), async (req, res) => {
+router.get('/users', authenticateToken, requireRole(['SUPER_ADMIN']), async (req, res) => {
     try {
         const users = await prisma.user.findMany({
             select: {
@@ -28,7 +28,7 @@ router.get('/users', authenticateToken, requireRole(['ADMIN']), async (req, res)
 });
 
 // Create new user
-router.post('/users', authenticateToken, requireRole(['ADMIN']), async (req, res) => {
+router.post('/users', authenticateToken, requireRole(['SUPER_ADMIN']), async (req, res) => {
     const { username, password, role, visibleFields, linkedPartnerId } = req.body;
 
     try {
@@ -81,7 +81,7 @@ router.post('/users', authenticateToken, requireRole(['ADMIN']), async (req, res
 });
 
 // Update user
-router.put('/users/:id', authenticateToken, requireRole(['ADMIN']), async (req, res) => {
+router.put('/users/:id', authenticateToken, requireRole(['SUPER_ADMIN']), async (req, res) => {
     const { id } = req.params;
     const { username, password, role, visibleFields, linkedPartnerId } = req.body;
 
@@ -125,7 +125,7 @@ router.put('/users/:id', authenticateToken, requireRole(['ADMIN']), async (req, 
 });
 
 // Delete user
-router.delete('/users/:id', authenticateToken, requireRole(['ADMIN']), async (req, res) => {
+router.delete('/users/:id', authenticateToken, requireRole(['SUPER_ADMIN']), async (req, res) => {
     const { id } = req.params;
 
     try {

@@ -22,6 +22,14 @@ const CourierTable: React.FC<Props> = ({ couriers, onUpdate, onEdit, onDelete })
         return user.visibleFields.split(',').includes(field);
     };
 
+    const getColSpan = () => {
+        let cols = 6; // Date, Customer, Tracking, Products, Status, Actions
+        if (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'PARTNER') cols++; // Unit / Wt
+        if (user?.role !== 'PARTNER') cols++; // Total Paid
+        if (user?.role === 'SUPER_ADMIN' || user?.role === 'PARTNER') cols++; // Courier Cost
+        return cols;
+    };
+
     const handleWhatsApp = (courier: Courier, type: 'General' | 'Paid' | 'Shipped') => {
         if (!courier.phoneNumber) return;
         const cleanPhone = courier.phoneNumber.replace(/[^0-9]/g, '');
@@ -251,7 +259,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                                 {courier.products?.length || 0} Items
                                             </span>
                                         </td>
-                                        {(user?.role === 'ADMIN' || user?.role === 'PARTNER') && (
+                                        {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'PARTNER') && (
                                             <td className="px-3 py-3">
                                                 <input
                                                     type="text"
@@ -350,8 +358,8 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                                 </button>
                                             )}
-                                            {/* Only Super Admin Delete */}
-                                            {user?.role === 'SUPER_ADMIN' && (
+                                            {/* Delete button (Admin & Super Admin) */}
+                                            {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
                                                 <button onClick={(e) => { e.stopPropagation(); if (confirm('Delete this courier?')) onDelete && onDelete(courier.id); }}
                                                     className="text-white bg-red-500 hover:bg-red-600 rounded-full p-2 shadow-md transition-colors" title="Delete">
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -361,7 +369,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                     </tr>
                                     {expandedRow === courier.id && (
                                         <tr className="bg-gray-50/50">
-                                            <td colSpan={user?.role === 'ADMIN' || user?.role === 'PARTNER' ? 8 : 7} className="px-4 py-4">
+                                            <td colSpan={getColSpan()} className="px-4 py-4">
                                                 <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-inner">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                         <div>
@@ -495,7 +503,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                                 <li key={i} className="flex justify-between border-b border-gray-100 pb-1 last:border-0">
                                                     <span>{p.name}</span>
                                                     <span className="font-mono text-xs">
-                                                        {user?.role === 'ADMIN' && `(C: ${p.cost}) `}
+                                                        {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && `(C: ${p.cost}) `}
                                                         ₹{p.price}
                                                     </span>
                                                 </li>
@@ -504,16 +512,16 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                     </div>
 
                                     {/* Financials for Admin/Partner */}
-                                    {(user?.role === 'ADMIN' || user?.role === 'PARTNER') && (
+                                    {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'PARTNER') && (
                                         <div className="mt-2 border-t border-gray-200 pt-2 grid grid-cols-2 gap-2 text-xs">
-                                            {user?.role === 'ADMIN' && (
+                                            {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
                                                 <div>
                                                     <span className="text-gray-500">Total Paid:</span>
                                                     <span className="font-bold block text-sm">₹{courier.totalPaid?.toFixed(2)}</span>
                                                 </div>
                                             )}
                                             <span className="text-gray-500">Courier Cost:</span>
-                                            {user?.role === 'ADMIN' ? (
+                                            {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') ? (
                                                 <span className="font-bold block text-sm text-red-500">-₹{courier.courierCost?.toFixed(2)}</span>
                                             ) : (
                                                 <input
@@ -529,13 +537,13 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                                     className="w-24 p-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none bg-white transition-all font-bold text-gray-700"
                                                 />
                                             )}
-                                            {user?.role === 'ADMIN' && (
+                                            {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
                                                 <div>
                                                     <span className="text-gray-500">Packing:</span>
                                                     <span className="font-bold block text-sm text-red-500">-₹{courier.packingCost?.toFixed(2)}</span>
                                                 </div>
                                             )}
-                                            {user?.role === 'ADMIN' && (
+                                            {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
                                                 <div className="bg-green-50 p-1 rounded">
                                                     <span className="text-green-700 font-bold">Profit: ₹{courier.profit?.toFixed(2)}</span>
                                                 </div>
@@ -547,7 +555,7 @@ ${courier.courierPaid ? `*Courier Charge:* ₹${courier.courierPaid}` : ''}
                                         <div className="mt-4 pt-3 border-t border-gray-200">
                                             <div className="flex justify-between items-center mb-2">
                                                 <label className="text-xs font-bold text-gray-500 block">Update Status</label>
-                                                {user?.role === 'ADMIN' && (
+                                                {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); if (confirm('Delete this courier?')) onDelete && onDelete(courier.id); }}
                                                         className="text-red-500 text-xs font-bold hover:text-red-700 flex items-center"

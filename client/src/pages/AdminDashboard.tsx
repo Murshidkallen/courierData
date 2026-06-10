@@ -181,8 +181,11 @@ const AdminDashboard = () => {
                                     <tr key={user.id} className="hover:bg-white/30 transition-colors">
                                         <td className="p-4 text-gray-800 font-medium">{user.username}</td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-indigo-100 text-indigo-700'
-                                                }`}>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                user.role === 'SUPER_ADMIN' ? 'bg-amber-100 text-amber-700 font-bold' :
+                                                user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 
+                                                'bg-indigo-100 text-indigo-700'
+                                            }`}>
                                                 {user.role}
                                             </span>
                                         </td>
