@@ -1,8 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import * as jwtDecodeLib from 'jwt-decode';
-
-// Robust import for different build environments
-const jwtDecode = (jwtDecodeLib as any).jwtDecode || (jwtDecodeLib as any).default || jwtDecodeLib;
+import { jwtDecode } from 'jwt-decode';
 
 interface User {
     username: string;
@@ -27,12 +24,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const token = localStorage.getItem('token');
         if (token) {
             try {
-                // Check if jwtDecode is actually a function
-                if (typeof jwtDecode !== 'function') {
-                    console.error("jwt-decode library issue: Import failed to resolve a function", jwtDecodeLib);
-                    throw new Error("jwt-decode import failed");
-                }
-
                 const decoded: any = jwtDecode(token);
                 // Helper check for expiry could go here
                 if (decoded.exp * 1000 < Date.now()) {

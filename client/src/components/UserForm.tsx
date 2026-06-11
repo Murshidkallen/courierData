@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from '../config';
-import { useAuth } from '../AuthContext';
 
 interface UserFormProps {
     initialData?: {
@@ -32,7 +31,6 @@ const AVAILABLE_FIELDS = [
 ];
 
 const UserForm: React.FC<UserFormProps> = ({ initialData, onSubmit, onCancel }) => {
-    const { user: currentUser } = useAuth();
     const [username, setUsername] = useState(initialData?.username || '');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState(initialData?.role || 'STAFF');
